@@ -58,4 +58,3 @@ class SVExtraction:
                     columns.append(ele.text.strip())
             self.sv_data.append(columns)
 
-    def
