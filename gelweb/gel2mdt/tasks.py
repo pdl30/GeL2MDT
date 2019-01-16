@@ -39,7 +39,8 @@ from bokeh.plotting import figure
 from django.core.mail import EmailMessage
 from reversion.models import Version, Revision
 from protocols.reports_6_0_0 import InterpretedGenome, InterpretationRequestRD, CancerInterpretationRequest, ClinicalReport
-
+from django.utils import timezone
+import csv
 
 def get_gel_content(ir, ir_version):
     '''
@@ -50,7 +51,6 @@ def get_gel_content(ir, ir_version):
     :return: Beatitful soup version of the report
     '''
     # otherwise get uname and password from a file
-
     interpretation_reponse = PollAPI(
         "cip_api", f'interpretation-request/{ir}/{ir_version}')
     interp_json = interpretation_reponse.get_json_response()
@@ -218,7 +218,7 @@ def case_alert_email():
                     if report.ir_family.participant_family.proband.gel_id == str(case.gel_id):
                         matching_cases[s_type][case.id].append((report.id,
                                                                 report.ir_family.ir_family_id))
-                    sample_types[s_type] = True
+                        sample_types[s_type] = True
                 except Proband.DoesNotExist:
                     pass
 
@@ -240,6 +240,42 @@ def case_alert_email():
             pass
 
 @task
+def cases_not_completed_email():
+    import datetime
+    all_mdts = MDT.objects.all()
+    reports_for_email = []
+    for mdt in all_mdts:
+        if mdt.date_of_mdt < timezone.now() - datetime.timedelta(weeks=16):
+            for report in mdt.mdtreport_set.all():
+                if report.interpretation_report.case_status != 'C':
+                    reports_for_email.append(report)
+    with open('case_status_update.csv', 'w') as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter=',', quoting=csv.QUOTE_MINIMAL)
+        csvwriter.writerow(
+            ['SampleType', 'Participant ID', 'CIP ID', 'MDT Link', 'MDT name', 'Date of MDT', 'Case Status'])
+        for report in reports_for_email:
+            try:
+                csvwriter.writerow(
+                    [report.MDT.sample_type, report.interpretation_report.ir_family.participant_family.proband.gel_id,
+                     report.interpretation_report.ir_family.ir_family_id,
+                     f'http://10.101.87.72:8000/mdt_view/{report.MDT.id}', report.MDT.description,
+                     report.MDT.date_of_mdt.date(), report.interpretation_report.get_case_status_display()])
+            except Proband.DoesNotExist:
+                pass
+    subject, from_email, to = f'GeL2MDT Not Closed Case Alert', 'bioinformatics@gosh.nhs.uk', \
+                              'GELTeam@gosh.nhs.uk'
+    text_content = f'Please see attached report'
+    try:
+        msg = EmailMessage(subject, text_content, from_email, [to])
+        msg.attach_file("case_status_update.csv")
+        msg.send()
+        os.remove('case_status_update.csv')
+    except Exception as e:
+        print(e)
+
+
+
+@task
 def update_report_email():
     '''
     Utility function which sends emails to GELTeam about last weeks updates
@@ -247,9 +283,9 @@ def update_report_email():
     '''
     from datetime import date
     from django.db.models import Sum
+    import datetime
     text_content = ''
     today = date.today()
-    import datetime
     week_ago = today - datetime.timedelta(days=7)
     for i, sample_type in enumerate(['raredisease', 'cancer']):
         listupdates = ListUpdate.objects.filter(update_time__gte=week_ago).filter(sample_type=sample_type)
@@ -273,7 +309,7 @@ def update_report_email():
 
     listupdates = ListUpdate.objects.filter(update_time__gte=date.today())
     if all(listupdates.values_list('success', flat=True)) and text_content:
-        subject, from_email, to = 'GeL2MDT Weekly Update Report', 'bioinformatics@gosh.nhs.uk', 'bioinformatics@gosh.nhs.uk'
+        subject, from_email, to = 'GeL2MDT Weekly Update Report', 'bioinformatics@gosh.nhs.uk', 'GELTeam@gosh.nhs.uk'
         msg = EmailMessage(subject, text_content, from_email, [to])
         try:
             msg.send()
@@ -313,7 +349,7 @@ def update_cases():
     the database with new cases
     :return:
     '''
-    MultipleCaseAdder(sample_type='raredisease', pullt3=False, skip_demographics=False)
+    MultipleCaseAdder(sample_type='raredisease', bins=300, pullt3=False, skip_demographics=False)
     MultipleCaseAdder(sample_type='cancer', pullt3=False, skip_demographics=False)
 
 
