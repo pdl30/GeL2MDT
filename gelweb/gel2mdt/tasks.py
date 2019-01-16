@@ -41,6 +41,10 @@ from reversion.models import Version, Revision
 from protocols.reports_6_0_0 import InterpretedGenome, InterpretationRequestRD, CancerInterpretationRequest, ClinicalReport
 from django.utils import timezone
 import csv
+import xlsxwriter
+from datetime import date
+from django.db.models import Sum
+import datetime
 
 def get_gel_content(ir, ir_version):
     '''
@@ -241,7 +245,6 @@ def case_alert_email():
 
 @task
 def cases_not_completed_email():
-    import xlsxwriter
     all_mdts = MDT.objects.all()
     workbook = xlsxwriter.Workbook("monthly_results.xlsx")
     worksheet = workbook.add_worksheet('Summary')
@@ -297,28 +300,28 @@ def update_report_email():
     Utility function which sends emails to GELTeam about last weeks updates
     :return:
     '''
-    from datetime import date
-    from django.db.models import Sum
-    import datetime
     text_content = ''
     today = date.today()
     week_ago = today - datetime.timedelta(days=7)
     for i, sample_type in enumerate(['raredisease', 'cancer']):
         listupdates = ListUpdate.objects.filter(update_time__gte=week_ago).filter(sample_type=sample_type)
         total_added = listupdates.aggregate(Sum('cases_added'))['cases_added__sum']
-        if total_added > 0:
-            text_content += f'{sample_type.title()} Update Report:\n\nTotal number of cases added: {total_added}\n\n'
-            text_content += f'Summary of Cases Added:\n'
-            text_content += f'CIPID\tGELID\tForename\tSurname\tClinician\tCenter\n'
-            for update in listupdates:
-                reports_added = update.reports_added.all()
-                for report in reports_added:
-                    text_content += f'{report.ir_family.ir_family_id}\t' \
-                                    f'{report.ir_family.participant_family.proband.gel_id}\t' \
-                                    f'{report.ir_family.participant_family.proband.forename}\t' \
-                                    f'{report.ir_family.participant_family.proband.surname}\t' \
-                                    f'{report.ir_family.participant_family.clinician}\t' \
-                                    f'{report.ir_family.participant_family.proband.gmc}\n'
+        if total_added:
+            if total_added > 0:
+                text_content += f'{sample_type.title()} Update Report:\n\nTotal number of cases added: {total_added}\n\n'
+                text_content += f'Summary of Cases Added:\n'
+                text_content += f'CIPID\tGELID\tForename\tSurname\tClinician\tCenter\n'
+                for update in listupdates:
+                    reports_added = update.reports_added.all()
+                    for report in reports_added:
+                        text_content += f'{report.ir_family.ir_family_id}\t' \
+                                        f'{report.ir_family.participant_family.proband.gel_id}\t' \
+                                        f'{report.ir_family.participant_family.proband.forename}\t' \
+                                        f'{report.ir_family.participant_family.proband.surname}\t' \
+                                        f'{report.ir_family.participant_family.clinician}\t' \
+                                        f'{report.ir_family.participant_family.proband.gmc}\n'
+            else:
+                text_content += f'No new cases were added for {sample_type.title()}\n'
         else:
             text_content += f'No new cases were added for {sample_type.title()}\n'
         text_content += '\n----------------------------------------------------------------------------------------\n\n'
@@ -339,7 +342,6 @@ def listupdate_email():
     Utility function which sends emails to admin about last nights update
     :return:
     '''
-    from datetime import date
     send = False
     bioinfo_content = 'Sample Type\tUpdate Time\tNo. Cases Added\tNo. Cases Updated\tError\n'
     for i, sample_type in enumerate(['raredisease', 'cancer']):
@@ -628,7 +630,7 @@ class UpdateDemographics(object):
             proband.nhs_number = participant_demographics['nhs_num']
             proband.surname = participant_demographics['surname']
             proband.forename = participant_demographics['forename']
-            proband.date_of_birth = datetime.strptime(participant_demographics["date_of_birth"],
+            proband.date_of_birth = datetime.datetime.strptime(participant_demographics["date_of_birth"],
                                                                "%Y/%m/%d").date()
             proband.recruiting_disease = recruiting_disease
             proband.gmc = self.clinician.hospital
