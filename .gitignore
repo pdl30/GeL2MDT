@@ -3,6 +3,7 @@ PROJECT-SPECIFIC
 /gelweb/gel2mdt/migrations/*
 /gelweb/gel2mdt/config/config.txt
 /gelweb/celerybeat-schedule*
+Docker/nginx/ssl/
 *.sqlite3
 *.sqlite3-journal
 .idea
