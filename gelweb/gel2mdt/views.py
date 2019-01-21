@@ -53,6 +53,7 @@ from .vep_utils.run_vep_batch import CaseVariant
 from bokeh.resources import CDN
 from bokeh.embed import components
 from bokeh.layouts import gridplot, row
+from datetime import datetime
 
 
 def register(request):

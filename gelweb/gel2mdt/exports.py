@@ -87,6 +87,19 @@ def write_mdt_outcome_template(report):
  
     document.add_heading('Genomics MDM record', 0)
 
+    # table = document.add_table(rows=1, cols=1, style='Table Grid')
+    # table.rows[0].cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    # run = table.rows[0].cells[0].paragraphs[0].add_run(
+    #     'FOR RESEARCH PURPOSES ONLY- THESE RESULTS HAVE NOT BEEN VALIDATED.\n')
+    # run.font.color.rgb = RGBColor(255, 0, 0)
+    # run = table.rows[0].cells[0].paragraphs[0].add_run(
+    #     'UNVALIDATED FINDINGS MUST NOT BE ACTED UPON.\n')
+    # run.font.color.rgb = RGBColor(255, 0, 0)
+    #
+    # table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.3)
+    # paragraph = document.add_paragraph()
+    # paragraph.add_run()
+
     table = document.add_table(rows=2, cols=4, style='Table Grid')
     heading_cells = table.rows[0].cells
     heading_cells[0].paragraphs[0].add_run('Patient Name').bold=True
