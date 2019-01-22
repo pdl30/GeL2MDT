@@ -201,6 +201,42 @@ def update_for_t3(report_id):
                       pullt3=True,
                       sample=report.ir_family.participant_family.proband.gel_id)
 
+
+@task
+def report_export_for_rakib():
+    rd_irs = GELInterpretationReport.objects.latest_cases_by_sample_type('raredisease')
+    cancer_irs = GELInterpretationReport.objects.latest_cases_by_sample_type('cancer')
+    output = open('GEL_summary.csv', 'w')
+    output.write('CIP ID,GEL Participant ID,Case Status,Disease,Disease subtype,LDP,SampleType\n')
+    for q in rd_irs:
+        try:
+            output.write(f'{q.ir_family.ir_family_id},{q.ir_family.participant_family.proband.gel_id},'
+                         f'{q.get_case_status_display()},{q.ir_family.participant_family.proband.recruiting_disease},'
+                         f'{q.ir_family.participant_family.proband.disease_subtype},'
+                         f'{q.ir_family.participant_family.proband.gmc},RareDisease\n')
+        except Proband.DoesNotExist:
+            pass
+    for q in cancer_irs:
+        try:
+            output.write(f'{q.ir_family.ir_family_id},{q.ir_family.participant_family.proband.gel_id},'
+                         f'{q.get_case_status_display()},{q.ir_family.participant_family.proband.recruiting_disease},'
+                         f'{q.ir_family.participant_family.proband.disease_subtype},'
+                         f'{q.ir_family.participant_family.proband.gmc},Cancer\n')
+        except Proband.DoesNotExist:
+            pass
+    output.close()
+    subject, from_email, to = f'GeL2MDT Case Export', 'bioinformatics@gosh.nhs.uk', \
+                              'Rakib.Miah@gosh.nhs.uk'
+    text_content = f'Please see attached report'
+    try:
+        msg = EmailMessage(subject, text_content, from_email, [to])
+        msg.attach_file("GEL2MDT_export.csv")
+        msg.send()
+        os.remove('GEL2MDT_export.csv')
+    except Exception as e:
+        print(e)
+
+
 @task
 def case_alert_email():
     '''
