@@ -101,6 +101,8 @@ services:
     build: .
     image: gel2mdt_flower
     restart: always
+    volumes:
+      - .:/root/gel2mdt/
     command: bash -c "cd /root/gel2mdt/gelweb && celery flower -A gelweb --broker=redis://redis:6379 --port=5550"
     ports:
       - "5500:5550"
