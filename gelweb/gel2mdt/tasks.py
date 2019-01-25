@@ -72,14 +72,14 @@ def get_gel_content(ir, ir_version):
         if latest == 1:
             print('latest',  1)
             html_report = PollAPI(
-                "cip_api_for_report", f"ClinicalReport/{ir}/{ir_version}/{latest}"
+                "cip_api", f"clinical-report/{ir}/{ir_version}/{latest}"
             )
             gel_content = html_report.get_json_response(content=True)
         else:
             while latest > 0:
                 print('latest', latest)
                 html_report = PollAPI(
-                    "cip_api_for_report", f"ClinicalReport/{ir}/{ir_version}/{latest}"
+                    "cip_api", f"clinical-report/{ir}/{ir_version}/{latest}"
                 )
                 gel_content = html_report.get_json_response(content=True)
                 gel_json_content = json.loads(gel_content)
@@ -93,7 +93,7 @@ def get_gel_content(ir, ir_version):
 
     analysis_panels = {}
 
-    panel_app_panel_query_version = 'https://bioinfo.extge.co.uk/crowdsourcing/WebServices/get_panel/{panelhash}/?version={version}'
+    panel_app_panel_query_version = 'https://panelapp.genomicsengland.co.uk/api/v1/panels/{panelhash}/?version={version}'
     if 'pedigree' in interp_json['interpretation_request_data']['json_request']:
         if interp_json['interpretation_request_data']['json_request']['pedigree']['analysisPanels']:
             for panel_section in interp_json['interpretation_request_data']['json_request']['pedigree']['analysisPanels']:
@@ -102,9 +102,10 @@ def get_gel_content(ir, ir_version):
                 analysis_panels[panel_name] = {}
                 panel_details = requests.get(panel_app_panel_query_version.format(panelhash=panel_name, version=version),
                                              verify=False).json()
-                analysis_panels[panel_name][panel_details['result']['SpecificDiseaseName']] = []
-                for gene in panel_details['result']['Genes']:
-                    analysis_panels[panel_name][panel_details['result']['SpecificDiseaseName']].append(gene['GeneSymbol'])
+                analysis_panels[panel_name][panel_details['name']] = []
+
+                for gene in panel_details['genes']:
+                    analysis_panels[panel_name][panel_details['name']].append(gene['gene_data']['gene_symbol'])
 
     gene_panels = {}
     for panel, details in analysis_panels.items():
