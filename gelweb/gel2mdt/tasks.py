@@ -56,7 +56,7 @@ def get_gel_content(ir, ir_version):
     '''
     # otherwise get uname and password from a file
     interpretation_reponse = PollAPI(
-        "cip_api", f'interpretation-request/{ir}/{ir_version}')
+        "cip_api", f'interpretation-request/{ir}/{ir_version}/')
     interp_json = interpretation_reponse.get_json_response()
     analysis_versions = []
     latest = None
@@ -68,28 +68,25 @@ def get_gel_content(ir, ir_version):
         except ValueError as e:
             latest = 1
 
-    try:
-        if latest == 1:
-            print('latest',  1)
-            html_report = PollAPI(
-                "cip_api", f"clinical-report/{ir}/{ir_version}/{latest}"
-            )
-            gel_content = html_report.get_json_response(content=True)
-        else:
-            while latest > 0:
-                print('latest', latest)
-                html_report = PollAPI(
-                    "cip_api", f"clinical-report/{ir}/{ir_version}/{latest}"
-                )
-                gel_content = html_report.get_json_response(content=True)
-                gel_json_content = json.loads(gel_content)
-                if gel_json_content['detail'].startswith('Not found') or gel_json_content['detail'].startswith(
-                        'Method \"GET\" not allowed'):
-                    latest -= 1
+    loop_over_reports = True
+    while loop_over_reports:
+        print('latest', latest)
+        html_report = PollAPI(
+            "cip_api", f"clinical-report/{ir}/{ir_version}/{latest}"
+        )
+        gel_content = html_report.get_json_response(content=True)
+        try:
+            gel_json_content = json.loads(gel_content)
+            if gel_json_content['detail'].startswith('Not found') or gel_json_content['detail'].startswith(
+                    'Method \"GET\" not allowed'):
+                if latest == 1:
+                    raise ValueError('No Clinical Report found for this case')
                 else:
-                    break
-    except JSONDecodeError as e:
-        print('JSONDecodeError')
+                    latest -= 1
+            else:
+                loop_over_reports = False
+        except JSONDecodeError:
+            loop_over_reports = False
 
     analysis_panels = {}
 
@@ -103,9 +100,11 @@ def get_gel_content(ir, ir_version):
                 panel_details = requests.get(panel_app_panel_query_version.format(panelhash=panel_name, version=version),
                                              verify=False).json()
                 analysis_panels[panel_name][panel_details['name']] = []
-
-                for gene in panel_details['genes']:
-                    analysis_panels[panel_name][panel_details['name']].append(gene['gene_data']['gene_symbol'])
+                try:
+                    for gene in panel_details['genes']:
+                        analysis_panels[panel_name][panel_details['name']].append(gene['gene_data']['gene_symbol'])
+                except KeyError:
+                    pass
 
     gene_panels = {}
     for panel, details in analysis_panels.items():
