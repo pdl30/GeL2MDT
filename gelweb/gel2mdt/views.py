@@ -49,7 +49,6 @@ from .api.api_views import *
 
 from .database_utils.multiple_case_adder import MultipleCaseAdder
 from .vep_utils.run_vep_batch import CaseVariant
-
 from bokeh.resources import CDN
 from bokeh.embed import components
 from bokeh.layouts import gridplot, row
@@ -1339,3 +1338,19 @@ def delete_case_alert(request, case_alert_id):
     case_alert_instance.delete()
     messages.add_message(request, 25, 'Alert Deleted')
     return redirect('case-alert', sample_type=sample_type)
+
+
+@login_required
+def run_sv_extraction(request, report_id):
+    try:
+        report = GELInterpretationReport.objects.get(id=report_id)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; ' \
+                                          f'filename={report.ir_family.ir_family_id}.supplementary.filtered_sv_table.csv'
+        writer = csv.writer(response)
+        writer = sv_extraction(writer, report_id)
+        return response
+    except Exception as e:
+        print(e)
+        messages.add_message(request, 40, 'Something has gone wrong, please contact bioinformatics about this!')
+    return redirect('proband-view', report_id=report_id)

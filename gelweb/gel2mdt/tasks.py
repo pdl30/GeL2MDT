@@ -45,6 +45,9 @@ import xlsxwriter
 from datetime import date
 from django.db.models import Sum
 import datetime
+from django.contrib.auth.models import User, Group
+from .sv_extraction.filter_sv import SVFiltration
+
 
 def get_gel_content(ir, ir_version):
     '''
@@ -187,6 +190,22 @@ def panel_app(gene_panel, gp_version):
         gene_list.append(gene['GeneSymbol'])
     gene_panel_info = {'gene_list': gene_list, 'panel_length': len(gene_list)}
     return gene_panel_info
+
+
+def sv_extraction(writer, report_id):
+    '''
+    Takes the SV extraction package and ties it to a button
+    :param report_id:
+    :return:
+    '''
+    report = GELInterpretationReport.objects.get(id=report_id)
+    ir, ir_version = report.ir_family.ir_family_id.split('-')
+    SVFiltration(ir=ir, ir_version=ir_version, test_data=False)
+    with open(f"output/{report.ir_family.ir_family_id}.supplementary.filtered_sv_table.csv") as f:
+        csv_reader = csv.reader(f, delimiter=',')
+        for row in csv_reader:
+            writer.writerow(row)
+    return writer
 
 
 @task
