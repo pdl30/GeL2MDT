@@ -84,6 +84,7 @@ urlpatterns = [
     path('edit_case_alert/<int:case_alert_id>', views.edit_case_alert, name='edit-case-alert'),
     path('add_case_alert/', views.add_case_alert, name='add-case-alert'),
     path('delete_case_alert/<int:case_alert_id>', views.delete_case_alert, name='delete-case-alert'),
+    path('run_sv_extraction/<int:report_id>', views.run_sv_extraction, name='run-sv-extraction'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_DIR)
 
 urlpatterns += api_urlpatterns

@@ -20,7 +20,7 @@ services:
     restart: always
     build:
       context: .
-    command: bash -c ". /root/gel2mdt/Docker/startup_script.sh && cd /root/gel2mdt/gelweb && gunicorn gelweb.wsgi -t 90 -b 0.0.0.0:8000"
+    command: bash -c ". /root/gel2mdt/Docker/startup_script.sh && cd /root/gel2mdt/gelweb && gunicorn gelweb.wsgi --workers=9 -t 90 -b 0.0.0.0:8000"
     volumes:
       - .:/root/gel2mdt/
       - /home/genseqservadmin/.vep/:/root/.vep
