@@ -650,7 +650,7 @@ def edit_mdt(request, sample_type, mdt_id):
 
     gel_ir_list = GELInterpretationReport.objects.latest_cases_by_sample_type(
         sample_type=sample_type
-    )
+    ).prefetch_related(*['ir_family', 'ir_family__participant_family__proband'])
     mdt_instance = MDT.objects.get(id=mdt_id)
     mdt_reports = MDTReport.objects.filter(MDT=mdt_instance)
     reports_in_mdt = mdt_reports.values_list('interpretation_report', flat=True)
@@ -731,10 +731,13 @@ def mdt_view(request, mdt_id):
         t3_proband_variant_count[report.id] = 0
         pvs = ProbandVariant.objects.filter(interpretation_report=report)
         for pv in pvs:
-            if pv.pvflag_set.all() or pv.max_tier < 3:
+            if pv.pvflag_set.all() and pv.max_tier == None:
                 proband_variant_count[report.id] += 1
-            else:
-                t3_proband_variant_count[report.id] += 1
+            if pv.max_tier:
+                if pv.pvflag_set.all() or pv.max_tier < 3:
+                    proband_variant_count[report.id] += 1
+                else:
+                    t3_proband_variant_count[report.id] += 1
 
     mdt_form = MdtForm(instance=mdt_instance)
     clinicians = Clinician.objects.filter(mdt=mdt_id).values_list('name', flat=True)
@@ -1338,7 +1341,6 @@ def delete_case_alert(request, case_alert_id):
     case_alert_instance.delete()
     messages.add_message(request, 25, 'Alert Deleted')
     return redirect('case-alert', sample_type=sample_type)
-
 
 @login_required
 def run_sv_extraction(request, report_id):

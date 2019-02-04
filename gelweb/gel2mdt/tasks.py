@@ -225,7 +225,7 @@ def update_for_t3(report_id):
 def report_export_for_rakib():
     rd_irs = GELInterpretationReport.objects.latest_cases_by_sample_type('raredisease')
     cancer_irs = GELInterpretationReport.objects.latest_cases_by_sample_type('cancer')
-    output = open('GEL_summary.csv', 'w')
+    output = open('GEL2MDT_export.csv', 'w')
     output.write('CIP ID,GEL Participant ID,Case Status,Disease,Disease subtype,LDP,SampleType\n')
     for q in rd_irs:
         try:
