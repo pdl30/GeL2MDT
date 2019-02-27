@@ -38,6 +38,18 @@ def write_mdt_export(mdt_instance, mdt_reports):
     :param mdt_reports: List of reports which are present in MDT
     :return: CSV file Writer
     '''
+    failed_reports = []
+    for report in mdt_reports:
+        proband_variants = ProbandVariant.objects.filter(interpretation_report=report.interpretation_report)
+        for proband_variant in proband_variants:
+            transcript_variant = proband_variant.get_transcript_variant()
+            if transcript_variant is None:
+                failed_reports.append(report.interpretation_report.ir_family.ir_family_id)
+
+    if failed_reports:
+        failed_reports_formatted = ' '.join(failed_reports)
+        raise ValueError(f"Transcripts have not been selected for the following reports: {failed_reports_formatted}")
+
     # create in-memory output file
     output = io.BytesIO()
     workbook = xlsxwriter.Workbook(output)
@@ -86,9 +98,6 @@ def write_mdt_export(mdt_instance, mdt_reports):
         for proband_variant in proband_variants:
             transcript = proband_variant.get_transcript()
             transcript_variant = proband_variant.get_transcript_variant()
-            if transcript_variant is None:
-                raise ValueError(f'Transcripts have not been selected for Report: '
-                                 f'{report.interpretation_report.ir_family.ir_family_id}')
             if transcript and transcript_variant:
                 hgvs_c = None
                 hgvs_p = None
