@@ -184,18 +184,16 @@ def write_mdt_outcome_template(report):
 
     table = document.add_table(rows=1, cols=1, style='Table Grid')
     table.rows[0].cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run = table.rows[0].cells[0].paragraphs[0].add_run(
-        'THIS IS NOT A DIAGNOSTIC REPORT. UNVALIDATED FINDINGS SHOULD NOT BE USED TO INFORM CLINICAL '
-        'MANAGEMENT DECISIONS.\n')
+
+    run = table.rows[0].cells[0].paragraphs[0].add_run('THIS IS NOT A DIAGNOSTIC REPORT. UNVALIDATED FINDINGS SHOULD NOT BE USED TO INFORM CLINICAL MANAGEMENT DECISIONS.\n')
     run.font.color.rgb = RGBColor(255, 0, 0)
     run = table.rows[0].cells[0].paragraphs[0].add_run(
-        'This is a record of unvalidated variants identified through the 100,000 genome project. '
-        'Class 3 variants are of uncertain clinical significance, future review and diagnostic confirmation '
-        'may be appropriate if further evidence becomes available.\n')
+        'This is a record of unvalidated variants identified through the 100,000 genome project.\n'
+        'Class 3 variants are of uncertain clinical significance, future review and diagnostic confirmation may '
+        'be appropriate if further evidence becomes available.\n')
     run.font.color.rgb = RGBColor(255, 0, 0)
 
     table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.3)
-    # table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.1)
     paragraph = document.add_paragraph()
     paragraph.add_run()
 
