@@ -660,7 +660,7 @@ def start_mdt_view(request, sample_type):
     :param sample_type: Either raredisease or Cancer MDT will be created
     :return: View allowing users choose cases
     '''
-    mdt_instance = MDT(creator=request.user, date_of_mdt=datetime.datetime.now(), sample_type=sample_type)
+    mdt_instance = MDT(creator=request.user, date_of_mdt=datetime.now(), sample_type=sample_type)
     mdt_instance.save()
 
     return HttpResponseRedirect(f'/{sample_type}/edit_mdt/{mdt_instance.id}')
