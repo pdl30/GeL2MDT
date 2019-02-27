@@ -174,6 +174,7 @@ def get_gel_content(ir, ir_version):
     gel_content = gel_content.prettify()
     return gel_content
 
+
 def panel_app(gene_panel, gp_version):
     '''
     Returns the list of genes associated with a panel in a dictionary which are then placed in the GEL clinical report
