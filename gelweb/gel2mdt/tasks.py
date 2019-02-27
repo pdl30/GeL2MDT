@@ -338,8 +338,8 @@ def cases_not_completed_email():
             month_count += 2
 
     workbook.close()
-    subject, from_email, to = f'GeL2MDT Monthly Closed Case Alert', 'GELTeam@gosh.nhs.uk', \
-                              'bioinformatics@gosh.nhs.uk'
+    subject, from_email, to = f'GeL2MDT Monthly Closed Case Alert', 'bioinformatics@gosh.nhs.uk', \
+                              'GELTeam@gosh.nhs.uk'
     text_content = f'Please see attached report'
     try:
         msg = EmailMessage(subject, text_content, from_email, [to])
