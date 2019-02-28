@@ -98,7 +98,6 @@ def run_vep(infile, config_dict):
     # run VEP for hg19 variants
     annotated_variant_dict = {}
 
-
     if os.stat(hg19_vcf).st_size != 0: # if file not empty
         # builds command from locations supplied in config file
         cmd = "{vep} -i {infile} -o {outfile} --species homo_sapiens --force_overwrite --cache --dir_cache {cache} " \
@@ -113,7 +112,7 @@ def run_vep(infile, config_dict):
         )
         if config_dict["mergedVEP"] == 'True':
             cmd += ' --merged'
-        subprocess.Popen(cmd, stderr=subprocess.STDOUT, shell=True).wait()
+        subprocess.run(cmd, stderr=subprocess.STDOUT, shell=True, check=True)
         annotated_variant_dict['hg19_vep'] = hg19_outfile.name
     # run VEP for hg38 variants
     if os.stat(hg38_vcf).st_size != 0:
@@ -129,7 +128,7 @@ def run_vep(infile, config_dict):
         )
         if config_dict["mergedVEP"] == 'True':
             cmd += ' --merged'
-        subprocess.Popen(cmd, stderr=subprocess.STDOUT, shell=True).wait()
+            subprocess.run(cmd, stderr=subprocess.STDOUT, shell=True, check=True)
         annotated_variant_dict['hg38_vep'] = hg38_outfile.name
     return annotated_variant_dict
 
@@ -256,7 +255,7 @@ def parse_vep_annotations(infile=None):
                 variant_polyphen = variant['transcript_data'][transcript]['PolyPhen']
                 variant_sift = variant['transcript_data'][transcript]['SIFT']
                 transcript_variant_hgvs_c = variant['transcript_data'][transcript]['HGVSc']
-                transcript_variant_hgvs_p = variant['transcript_data'][transcript]['HGVSp']
+                transcript_variant_hgvs_p = variant['transcript_data'][transcript]['HGVSp'].replace('%3D', '=')
                 transcript_variant_hgvs_g = variant['transcript_data'][transcript]['HGVSg']
                 case_transcript = CaseTranscript(case_id, variant_count, gene_id, gene_name, hgnc_id, transcript_name, canonical,
                                                  transcript_strand, proband_transcript_variant_effect,

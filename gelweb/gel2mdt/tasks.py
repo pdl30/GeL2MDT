@@ -174,6 +174,7 @@ def get_gel_content(ir, ir_version):
     gel_content = gel_content.prettify()
     return gel_content
 
+
 def panel_app(gene_panel, gp_version):
     '''
     Returns the list of genes associated with a panel in a dictionary which are then placed in the GEL clinical report
@@ -329,7 +330,8 @@ def cases_not_completed_email():
             for case in notcompleted_cases:
                 try:
                     worksheet.write(row, month_count + 1,
-                                    case.interpretation_report.ir_family.participant_family.proband.gel_id)
+                                    f"{case.interpretation_report.ir_family.participant_family.proband.gel_id}; "
+                                    f"{case.interpretation_report.ir_family.participant_family.clinician.name}")
                     row += 1
                 except Proband.DoesNotExist:
                     pass
@@ -359,7 +361,7 @@ def update_report_email():
     today = date.today()
     week_ago = today - datetime.timedelta(days=7)
     for i, sample_type in enumerate(['raredisease', 'cancer']):
-        listupdates = ListUpdate.objects.filter(update_time__gte=week_ago).filter(sample_type=sample_type)
+        listupdates = ListUpdate.objects.filter(update_time__gte=week_ago, success=True).filter(sample_type=sample_type)
         total_added = listupdates.aggregate(Sum('cases_added'))['cases_added__sum']
         if total_added:
             if total_added > 0:
@@ -381,8 +383,7 @@ def update_report_email():
             text_content += f'No new cases were added for {sample_type.title()}\n'
         text_content += '\n----------------------------------------------------------------------------------------\n\n'
 
-    listupdates = ListUpdate.objects.filter(update_time__gte=date.today())
-    if all(listupdates.values_list('success', flat=True)) and text_content:
+    if text_content:
         subject, from_email, to = 'GeL2MDT Weekly Update Report', 'bioinformatics@gosh.nhs.uk', 'GELTeam@gosh.nhs.uk'
         msg = EmailMessage(subject, text_content, from_email, [to])
         try:
