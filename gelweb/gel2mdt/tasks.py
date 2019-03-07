@@ -197,16 +197,34 @@ def sv_extraction(writer, report_id):
     '''
     Takes the SV extraction package and ties it to a button
     :param report_id:
-    :return:
+    :return: Writer, if supplementary html has filtered SVs genes present
     '''
-    report = GELInterpretationReport.objects.get(id=report_id)
-    ir, ir_version = report.ir_family.ir_family_id.split('-')
-    SVFiltration(ir=ir, ir_version=ir_version, test_data=False)
-    with open(f"output/{report.ir_family.ir_family_id}.supplementary.filtered_sv_table.csv") as f:
-        csv_reader = csv.reader(f, delimiter=',')
-        for row in csv_reader:
-            writer.writerow(row)
-    return writer
+    try:
+        report = GELInterpretationReport.objects.get(id=report_id)
+        ir, ir_version = report.ir_family.ir_family_id.split('-')
+        sv = SVFiltration(ir=ir, ir_version=ir_version, test_data=False)
+
+        filename = sv.filename
+        html_version = sv.case.html_version
+        sv_count = sv.filtered_structural_variants_count
+
+        # not all cases have an supp. file.
+        if filename is None:
+            raise ValueError('No SVs returned. Case does not have a supplementary html (eg. FFPE).')
+        # old v1.6 html sv table very different format to later versions.
+        elif html_version == "v1.6":
+            raise ValueError('No SVs returned. Cannot filter GeL v1.6 html files.')
+        elif sv_count == 0:
+            raise ValueError('No SVs returned. No case SVs found in SV filter list.')
+        else:
+            with open(f"output/{report.ir_family.ir_family_id}.supplementary.filtered_sv_table.csv") as f:
+                csv_reader = csv.reader(f, delimiter=',')
+                for row in csv_reader:
+                    writer.writerow(row)
+            return writer
+    except ValueError as e:
+        print(e)
+        raise
 
 
 @task

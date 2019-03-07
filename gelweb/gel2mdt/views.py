@@ -1505,7 +1505,7 @@ def run_sv_extraction(request, report_id):
         writer = csv.writer(response)
         writer = sv_extraction(writer, report_id)
         return response
-    except Exception as e:
-        print(e)
-        messages.add_message(request, 40, 'Something has gone wrong, please contact bioinformatics about this!')
+    except ValueError as e:
+            message = str(e)
+            messages.add_message(request, 40, message)    
     return redirect('proband-view', report_id=report_id)
