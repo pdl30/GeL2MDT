@@ -1506,6 +1506,6 @@ def run_sv_extraction(request, report_id):
         writer = sv_extraction(writer, report_id)
         return response
     except ValueError as e:
-            message = str(e)
-            messages.add_message(request, 40, message)    
+        message = str(e)
+        messages.add_message(request, 40, message)   
     return redirect('proband-view', report_id=report_id)
