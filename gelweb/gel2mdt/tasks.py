@@ -676,28 +676,24 @@ class UpdateDemographics(object):
             pass
 
         recruiting_disease = None
-        if self.report.sample_type == 'raredisease':
-            schema_name = 'gel_rare_diseases',
-            query_name = 'rare_diseases_diagnosis'
-        elif self.report.sample_type == 'cancer':
-            schema_name = 'gel_cancer',
-            query_name = 'cancer_diagnosis'
-        search_results = lk.query.select_rows(
-            server_context=self.server_context,
-            schema_name=schema_name,
-            query_name=query_name,
-            filter_array=[
-                lk.query.QueryFilter('participant_identifiers_id',
-                                     self.report.ir_family.participant_family.proband.gel_id, 'eq')
-            ]
-        )
+        # stop using diagnosis from lk, use json file from cipapi
+        report_id, version = str(self.report).split(' ')
+        ir, ir_version = report_id.split('-')
         try:
-            if self.report.sample_type == 'raredisease':
-                recruiting_disease = search_results['rows'][0].get('gel_disease_information_specific_disease', None)
-            elif self.report.sample_type == 'cancer':
-                recruiting_disease = search_results['rows'][0].get('diagnosis_icd_code', None)
-        except IndexError as e:
-            pass
+            request_poll = PollAPI(
+                # instantiate a poll of CIPAPI for a given case json
+                "cip_api",
+                "interpretation-request/{id}/{version}?reports_v6=true".format(
+                    id=ir,
+                    version=ir_version))
+
+            response = request_poll.get_json_response()
+            interpretation_request_data = response['interpretation_request_data']
+            recruiting_disease = interpretation_request_data['json_request']['cancerParticipant']['primaryDiagnosisDisease']
+            recruiting_disease = recruiting_disease[0]
+
+        except ValueError as e:
+            print(e)
 
         if participant_demographics['surname'] != 'unknown' and participant_demographics['nhs_num'] != 'unknown':
             proband = self.report.ir_family.participant_family.proband
