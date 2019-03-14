@@ -50,6 +50,7 @@ from .api.api_views import *
 from .database_utils.multiple_case_adder import MultipleCaseAdder
 from .vep_utils.run_vep_batch import CaseVariant
 import datetime
+
 from bokeh.resources import CDN
 from bokeh.embed import components
 from bokeh.layouts import gridplot, row
@@ -1224,8 +1225,7 @@ def export_mdt_outcome_form(request, report_id):
     except ValueError as error:
         messages.add_message(request, 40, error)
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-
-
+      
 @login_required
 def export_gtab_template(request, report_id):
     '''
@@ -1310,8 +1310,8 @@ def genomics_england_report(request, report_id):
     cip_id = report.ir_family.ir_family_id.split('-')
     try:
         gel_content = get_gel_content(cip_id[0], cip_id[1])
-    except:
-        messages.add_message(request, 40, 'Not successful, please contact bioinformatics about this')
+    except ValueError:
+        messages.add_message(request, 40, 'No GEL report found for this case')
         return HttpResponseRedirect(f'/proband/{report_id}')
     return render(request, 'gel2mdt/gel_template.html', {'gel_content': gel_content})
 
@@ -1433,7 +1433,6 @@ def delete_case_alert(request, case_alert_id):
     messages.add_message(request, 25, 'Alert Deleted')
     return redirect('case-alert', sample_type=sample_type)
 
-
 @login_required
 def edit_preferred_transcript(request, geneid, genome_build_id):
     gene = Gene.objects.get(id=geneid)
@@ -1496,3 +1495,18 @@ def edit_comment(request, comment_id):
     html_form = render_to_string('gel2mdt/modals/comment_modal.html', context, request=request)
     data['html_form'] = html_form
     return JsonResponse(data)
+
+@login_required
+def run_sv_extraction(request, report_id):
+    try:
+        report = GELInterpretationReport.objects.get(id=report_id)
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; ' \
+                                          f'filename={report.ir_family.ir_family_id}.supplementary.filtered_sv_table.csv'
+        writer = csv.writer(response)
+        writer = sv_extraction(writer, report_id)
+        return response
+    except Exception as e:
+        print(e)
+        messages.add_message(request, 40, 'Something has gone wrong, please contact bioinformatics about this!')
+    return redirect('proband-view', report_id=report_id)

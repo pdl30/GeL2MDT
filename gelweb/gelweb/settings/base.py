@@ -17,7 +17,7 @@ from datetime import datetime
 
 # Check that the expected local_settings values are present
 try:
-    from .local_settings import SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASES, ADDITIONAL_APPS
+    from .local_settings import *
 except ImportError:
     print('Check the following settings are present in local_settings.py:\n'
           'SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASES, ADDITIONAL_APPS')
@@ -113,9 +113,13 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-                'level': 'DEBUG',
-                'class': 'logging.StreamHandler',
-                'formatter': 'simple'
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
         },
         'file': {
             'level': 'DEBUG',
@@ -131,6 +135,15 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+    'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+       'gelweb.custom': {
+            'handlers': ['console', 'mail_admins'],
+            'level': 'INFO',
+        }
     }
 }
 #ssh
