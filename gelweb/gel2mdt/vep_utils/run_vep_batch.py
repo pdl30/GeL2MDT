@@ -128,7 +128,8 @@ def run_vep(infile, config_dict):
         )
         if config_dict["mergedVEP"] == 'True':
             cmd += ' --merged'
-            subprocess.run(cmd, stderr=subprocess.STDOUT, shell=True, check=True)
+
+        subprocess.run(cmd, stderr=subprocess.STDOUT, shell=True, check=True)
         annotated_variant_dict['hg38_vep'] = hg38_outfile.name
     return annotated_variant_dict
 
