@@ -47,6 +47,7 @@ from django.db.models import Sum
 import datetime
 from django.contrib.auth.models import User, Group
 from .sv_extraction.filter_sv import SVFiltration
+import gc
 
 
 def get_gel_content(ir, ir_version):
@@ -425,6 +426,7 @@ def update_cases():
     '''
     MultipleCaseAdder(sample_type='raredisease', bins=300, pullt3=False, skip_demographics=False)
     MultipleCaseAdder(sample_type='cancer', pullt3=False, skip_demographics=False)
+    gc.collect()
 
 
 class VariantAdder(object):
