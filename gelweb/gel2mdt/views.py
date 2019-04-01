@@ -42,7 +42,7 @@ from .forms import *
 from .models import *
 from .filters import *
 from .tasks import *
-from .exports import write_mdt_outcome_template, write_mdt_export, write_gtab_template
+from .exports import write_mdt_outcome_template, write_mdt_export, write_gtab_template, monthly_not_completed
 from .decorators import user_is_clinician
 
 from .api.api_views import *
@@ -111,7 +111,7 @@ def register(request):
 
             except IntegrityError:
                 messages.error(request, 'If you have already registered, '
-                                        'please contact Bioinformatics to activate your account')
+                                        'please contact gel2mdt.technicalsupport@nhs.net to activate your account')
                 return HttpResponseRedirect('/register')
 
     else:
@@ -1503,6 +1503,7 @@ def edit_comment(request, comment_id):
     data['html_form'] = html_form
     return JsonResponse(data)
 
+
 @login_required
 def run_sv_extraction(request, report_id):
     try:
@@ -1515,5 +1516,21 @@ def run_sv_extraction(request, report_id):
         return response
     except Exception as e:
         print(e)
-        messages.add_message(request, 40, 'Something has gone wrong, please contact bioinformatics about this!')
+        messages.add_message(request, 40, 'Something has gone wrong, please contact gel2mdt.technicalsupport@nhs.net '
+                                          'about this!')
     return redirect('proband-view', report_id=report_id)
+
+
+@login_required
+def export_monthly_report(request):
+    if request.method == "POST":
+        try:
+            xlsx = monthly_not_completed()
+            response = HttpResponse(
+                xlsx,
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=monthly_not_completed_export.xlsx'
+            return response
+        except ValueError as error:
+            messages.add_message(request, 40, 'Something went wrong, please contact gel2mdt.technicalsupport@nhs.net')
+            return HttpResponseRedirect(f'/user_admin')

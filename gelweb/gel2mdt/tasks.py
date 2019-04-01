@@ -300,98 +300,6 @@ def case_alert_email():
         except Exception as e:
             pass
 
-@task
-def cases_not_completed_email():
-    all_mdts = MDT.objects.all()
-    workbook = xlsxwriter.Workbook("monthly_results.xlsx")
-    worksheet = workbook.add_worksheet('Summary')
-    months = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'June', 7: 'July', 8: 'Aug', 9: 'Sep', 10: 'Oct',
-              11: 'Nov', 12: 'Dec'}
-    years = ['2017', '2018', '2019']
-    month_count = 0
-    for year in years:
-        for month in months:
-            completed_cases = []
-            notcompleted_cases = []
-            worksheet.write(0, month_count, f"{year}_{months[month]}")
-            month_mdts = all_mdts.filter(date_of_mdt__year=year, date_of_mdt__month=month)
-            for mdt in month_mdts:
-                for report in mdt.mdtreport_set.all():
-                    if report.interpretation_report.case_status != 'C':
-                        notcompleted_cases.append(report)
-                    else:
-                        completed_cases.append(report)
-            worksheet.write(1, month_count, f"Completed Count: ")
-            worksheet.write(2, month_count, len(completed_cases))
-            worksheet.write(1, month_count + 1, f"Not Completed Count: ")
-            worksheet.write(2, month_count + 1, len(notcompleted_cases))
-            if notcompleted_cases:
-                worksheet.write(4, month_count + 1, 'Participant IDs')
-            row = 5
-            for case in notcompleted_cases:
-                try:
-                    worksheet.write(row, month_count + 1,
-                                    f"{case.interpretation_report.ir_family.participant_family.proband.gel_id}; "
-                                    f"{case.interpretation_report.ir_family.participant_family.clinician.name}")
-                    row += 1
-                except Proband.DoesNotExist:
-                    pass
-            month_count += 2
-
-    workbook.close()
-    subject, from_email, to = f'GeL2MDT Monthly Closed Case Alert', 'bioinformatics@gosh.nhs.uk', \
-                              'GELTeam@gosh.nhs.uk'
-    text_content = f'Please see attached report'
-    try:
-        msg = EmailMessage(subject, text_content, from_email, [to])
-        msg.attach_file("monthly_results.xlsx")
-        msg.send()
-        os.remove('monthly_results.xlsx')
-    except Exception as e:
-        print(e)
-
-
-
-@task
-def update_report_email():
-    '''
-    Utility function which sends emails to GELTeam about last weeks updates
-    :return:
-    '''
-    text_content = ''
-    today = date.today()
-    week_ago = today - datetime.timedelta(days=7)
-    for i, sample_type in enumerate(['raredisease', 'cancer']):
-        listupdates = ListUpdate.objects.filter(update_time__gte=week_ago, success=True).filter(sample_type=sample_type)
-        total_added = listupdates.aggregate(Sum('cases_added'))['cases_added__sum']
-        if total_added:
-            if total_added > 0:
-                text_content += f'{sample_type.title()} Update Report:\n\nTotal number of cases added: {total_added}\n\n'
-                text_content += f'Summary of Cases Added:\n'
-                text_content += f'CIPID\tGELID\tForename\tSurname\tClinician\tCenter\n'
-                for update in listupdates:
-                    reports_added = update.reports_added.all()
-                    for report in reports_added:
-                        text_content += f'{report.ir_family.ir_family_id}\t' \
-                                        f'{report.ir_family.participant_family.proband.gel_id}\t' \
-                                        f'{report.ir_family.participant_family.proband.forename}\t' \
-                                        f'{report.ir_family.participant_family.proband.surname}\t' \
-                                        f'{report.ir_family.participant_family.clinician}\t' \
-                                        f'{report.ir_family.participant_family.proband.gmc}\n'
-            else:
-                text_content += f'No new cases were added for {sample_type.title()}\n'
-        else:
-            text_content += f'No new cases were added for {sample_type.title()}\n'
-        text_content += '\n----------------------------------------------------------------------------------------\n\n'
-
-    if text_content:
-        subject, from_email, to = 'GeL2MDT Weekly Update Report', 'bioinformatics@gosh.nhs.uk', 'GELTeam@gosh.nhs.uk'
-        msg = EmailMessage(subject, text_content, from_email, [to])
-        try:
-            msg.send()
-        except Exception as e:
-            pass
-
 
 @task
 def listupdate_email():
@@ -409,7 +317,7 @@ def listupdate_email():
             bioinfo_content += f'{update.sample_type}\t{update.update_time}' \
                                f'\t{update.cases_added}\t{update.cases_updated}\t{update.error}\n'
     if send:
-        subject, from_email, to = 'GeL2MDT ListUpdate', 'bioinformatics@gosh.nhs.uk', \
+        subject, from_email, to = 'GeL2MDT ListUpdate', 'gel2mdt.technicalsupport@nhs.net', \
                                   'bioinformatics@gosh.nhs.uk'
         msg = EmailMessage(subject, bioinfo_content, from_email, [to])
         try:

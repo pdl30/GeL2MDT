@@ -261,6 +261,47 @@ def write_mdt_export(mdt_instance, mdt_reports):
     output.seek(0)
     return output
 
+
+def monthly_not_completed():
+    all_mdts = MDT.objects.all()
+    workbook = xlsxwriter.Workbook("monthly_results.xlsx")
+    worksheet = workbook.add_worksheet('Summary')
+    months = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'June', 7: 'July', 8: 'Aug', 9: 'Sep', 10: 'Oct',
+              11: 'Nov', 12: 'Dec'}
+    years = ['2017', '2018', '2019', '2020']
+    month_count = 0
+    for year in years:
+        for month in months:
+            completed_cases = []
+            notcompleted_cases = []
+            worksheet.write(0, month_count, f"{year}_{months[month]}")
+            month_mdts = all_mdts.filter(date_of_mdt__year=year, date_of_mdt__month=month)
+            for mdt in month_mdts:
+                for report in mdt.mdtreport_set.all():
+                    if report.interpretation_report.case_status != 'C':
+                        notcompleted_cases.append(report)
+                    else:
+                        completed_cases.append(report)
+            worksheet.write(1, month_count, f"Completed Count: ")
+            worksheet.write(2, month_count, len(completed_cases))
+            worksheet.write(1, month_count + 1, f"Not Completed Count: ")
+            worksheet.write(2, month_count + 1, len(notcompleted_cases))
+            if notcompleted_cases:
+                worksheet.write(4, month_count + 1, 'Participant IDs')
+            row = 5
+            for case in notcompleted_cases:
+                try:
+                    worksheet.write(row, month_count + 1,
+                                    f"{case.interpretation_report.ir_family.participant_family.proband.gel_id}; "
+                                    f"{case.interpretation_report.ir_family.participant_family.clinician.name}")
+                    row += 1
+                except Proband.DoesNotExist:
+                    pass
+            month_count += 2
+    workbook.close()
+    return workbook
+
+
 def write_mdt_outcome_template(report):
     """
     :param pk: GEL Interpretationreport instance
