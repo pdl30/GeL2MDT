@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/2.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.0/ref/settings/
 """
-
+from django.conf import settings
 import os
 import sys
 from django.contrib.messages import constants as messages
@@ -20,17 +20,18 @@ try:
     from .local_settings import *
 except ImportError:
     print('Check the following settings are present in local_settings.py:\n'
-          'SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASES')
+          'SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASES, ADDITIONAL_APPS')
     sys.exit()
 
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STATIC_DIR = os.path.join(BASE_DIR, 'static')
-STATIC_ROOT = os.path.join(BASE_DIR, 'static_files')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+STATIC_DIR = os.path.join(BASE_DIR, 'gelweb/static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'gelweb/static_files')
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'gelweb/static'),
 )
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
@@ -50,7 +51,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'rest_framework',
     'easy_pdf'
-]
+] + ADDITIONAL_APPS
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -100,6 +101,8 @@ NOSE_ARGS = [
 # https://docs.djangoproject.com/en/2.0/topics/logging/
 datetime_str_format = datetime.strftime(datetime.now(), '%Y-%m-%d')
 
+
+
 LOGGING = {
     'version': 1,
     'formatters': {
@@ -120,6 +123,11 @@ LOGGING = {
             'level': 'ERROR',
             'class': 'django.utils.log.AdminEmailHandler',
         },
+        'mail_managers': {
+            'level': 'ERROR',
+            'class': 'gel2mdt.email_handler.ManagerEmailHandler',
+            'include_html': False
+        },
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
@@ -134,15 +142,16 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-    'django.request': {
-            'handlers': ['mail_admins'],
+        'django.request': {
+            'handlers': ['mail_admins', 'mail_managers'],
             'level': 'ERROR',
             'propagate': False,
         },
-       'gelweb.custom': {
-            'handlers': ['console', 'mail_admins'],
+        'gelweb.custom': {
+            'handlers': ['console', 'mail_admins', 'mail_managers'],
             'level': 'INFO',
-        }
+        },
+
     }
 }
 #ssh

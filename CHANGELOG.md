@@ -1,3 +1,21 @@
+## [0.6.2]- 2019-04-01
+
+### Changed
+- Customised the MDT export for cancer MDTs
+- Fixed bug on MDT page where MDT description was removed when marking MDT as sent to clinician
+- Fixed bug where changing the assigned user for a case deleted information from a number of demograhics fields
+
+## [0.6.1]- 2019-02-26
+### Added
+- Preferred transcript selection
+- Case comments
+- 1st and 2nd check assignment
+- Additional MDT tracking features
+- Option to allow for 'ADDITIONAL_APPS' to be imported in settings file. Requires `ADDITIONAL_APPS = []` to be added to `local_settings.py` 
+
+### Changed
+- Format of MDT export
+
 ## [0.6.0]- 2018-11-22
 ### Added
 - GTAB template export

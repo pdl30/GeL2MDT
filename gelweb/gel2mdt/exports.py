@@ -21,6 +21,8 @@ SOFTWARE.
 """
 from .models import *
 import csv
+import xlsxwriter
+import io
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from django.conf import settings
@@ -28,7 +30,8 @@ import os
 from docx.shared import Pt, Inches, RGBColor, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
-def write_mdt_export(writer, mdt_instance, mdt_reports):
+
+def write_mdt_export(mdt_instance, mdt_reports):
     '''
     Writes a summary of the cases which are being brought to MDT
     :param writer: CSV file writer
@@ -36,43 +39,267 @@ def write_mdt_export(writer, mdt_instance, mdt_reports):
     :param mdt_reports: List of reports which are present in MDT
     :return: CSV file Writer
     '''
-    writer.writerow(['Forename', 'Surname', 'DOB', 'NHS no.', 'GELID', 'CIPID',
-                     'Clinician', 'Panel', 'Variant&Zygosity'])
-
+    failed_reports = []
     for report in mdt_reports:
         proband_variants = ProbandVariant.objects.filter(interpretation_report=report.interpretation_report)
-        panels = InterpretationReportFamilyPanel.objects.filter(ir_family=report.interpretation_report.ir_family)
-        pv_output = []
         for proband_variant in proband_variants:
-            transcript = proband_variant.get_transcript()
             transcript_variant = proband_variant.get_transcript_variant()
-            if transcript and transcript_variant:
-                hgvs_c = None
-                hgvs_p = None
-                hgvs_c_split = transcript_variant.hgvs_c.split(':')
-                hgvs_p_split = transcript_variant.hgvs_p.split(':')
-                if len(hgvs_c_split) > 1:
-                    hgvs_c = hgvs_c_split[1]
-                if len(hgvs_p_split) > 1:
-                    hgvs_p = hgvs_p_split[1]
-                pv_output.append(f'{transcript.gene}, '
-                                 f'{hgvs_c}, '
-                                 f'{hgvs_p}, '
-                                 f'{proband_variant.zygosity}')
-        panel_names = []
-        for panel in panels:
-            panel_names.append(f'{panel.panel.panel.panel_name}_'
-                               f'{panel.panel.version_number}')
-        writer.writerow([report.interpretation_report.ir_family.participant_family.proband.forename,
-                         report.interpretation_report.ir_family.participant_family.proband.surname,
-                         report.interpretation_report.ir_family.participant_family.proband.date_of_birth.date(),
-                         report.interpretation_report.ir_family.participant_family.proband.nhs_number,
-                         report.interpretation_report.ir_family.participant_family.proband.gel_id,
-                         report.interpretation_report.ir_family.ir_family_id,
-                         report.interpretation_report.ir_family.participant_family.clinician.name,
-                         '\n'.join(panel_names),
-                         '\n'.join(pv_output)])
-    return writer
+            if transcript_variant is None:
+                failed_reports.append(report.interpretation_report.ir_family.ir_family_id)
+
+    if failed_reports:
+        failed_reports_formatted = ' '.join(list(set(failed_reports)))
+        raise ValueError(f"Transcripts have not been selected for the following reports: {failed_reports_formatted}")
+
+    output = io.BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet()
+    # set formatting
+    header_format = workbook.add_format({'bold': 1})
+    vcenter_format = workbook.add_format({'valign': 'vcenter'})
+    vcenter_date_format = workbook.add_format({'valign': 'vcenter', 'num_format': 'mm/dd/yyyy'})
+    # write headings
+    if mdt_instance.sample_type == 'raredisease':
+        worksheet.write('A1', 'GEL ID', header_format)
+        worksheet.write('B1', 'CIP ID', header_format)
+        worksheet.write('C1', 'GMC', header_format)
+        worksheet.write('D1', 'Forename', header_format)
+        worksheet.write('E1', 'Surname', header_format)
+        worksheet.write('F1', 'Sex', header_format)
+        worksheet.write('G1', 'DOB', header_format)
+        worksheet.write('H1', 'NHS number', header_format)
+        worksheet.write('I1', 'Family ID', header_format)
+        worksheet.write('J1', 'Clinician', header_format)
+        worksheet.write('K1', 'Panel(s)', header_format)
+        worksheet.write('L1', 'Variant', header_format)
+        worksheet.write('M1', 'Inheritance', header_format)
+        worksheet.write('N1', 'Proband zygosity', header_format)
+        worksheet.write('O1', 'Maternal zygosity', header_format)
+        worksheet.write('P1', 'Paternal zygosity', header_format)
+        worksheet.write('Q1', 'Phenotypic fit', header_format)
+        worksheet.write('R1', 'Discussion required', header_format)
+        worksheet.write('S1', 'Comments', header_format)
+        worksheet.set_column('A:A', 10)
+        worksheet.set_column('B:B', 10)
+        worksheet.set_column('C:C', 10)
+        worksheet.set_column('D:F', 10)
+        worksheet.set_column('G:G', 10)
+        worksheet.set_column('H:H', 10)
+        worksheet.set_column('I:I', 10)
+        worksheet.set_column('J:J', 10)
+        worksheet.set_column('K:L', 40)
+        worksheet.set_column('M:M', 10)
+        worksheet.set_column('N:N', 18)
+        worksheet.set_column('O:O', 18)
+        worksheet.set_column('P:P', 30)
+        worksheet.set_column('Q:Q', 30)
+        worksheet.set_column('R:R', 30)
+        worksheet.set_column('S:S', 30)
+    elif mdt_instance.sample_type == 'cancer':
+        worksheet.write('A1', 'GEL ID', header_format)
+        worksheet.write('B1', 'CIP ID', header_format)
+        worksheet.write('C1', 'LDP', header_format)
+        worksheet.write('D1', 'Forename', header_format)
+        worksheet.write('E1', 'Surname', header_format)
+        worksheet.write('F1', 'Sex', header_format)
+        worksheet.write('G1', 'DOB', header_format)
+        worksheet.write('H1', 'NHS number', header_format)
+        worksheet.write('I1', 'Family ID', header_format)
+        worksheet.write('J1', 'Clinician', header_format)
+        worksheet.write('K1', 'Recruiting Disease', header_format)
+        worksheet.write('L1', 'Disease subtype', header_format)
+        worksheet.set_column('A:A', 10)
+        worksheet.set_column('B:B', 10)
+        worksheet.set_column('C:C', 10)
+        worksheet.set_column('D:F', 10)
+        worksheet.set_column('G:G', 10)
+        worksheet.set_column('H:H', 10)
+        worksheet.set_column('I:I', 10)
+        worksheet.set_column('J:J', 10)
+        worksheet.set_column('K:L', 10)
+
+    row_count = 2
+    if mdt_instance.sample_type == 'cancer':
+        for report in mdt_reports:
+            worksheet.write('A' + str(row_count),
+                            report.interpretation_report.ir_family.participant_family.proband.gel_id,
+                            vcenter_format)
+            worksheet.write('B' + str(row_count),
+                            report.interpretation_report.ir_family.ir_family_id, vcenter_format)
+            worksheet.write('C' + str(row_count),
+                            report.interpretation_report.ir_family.participant_family.proband.gmc, vcenter_format)
+            worksheet.write('D' + str(row_count),
+                            report.interpretation_report.ir_family.participant_family.proband.forename,
+                            vcenter_format)
+            worksheet.write('E' + str(row_count),
+                            report.interpretation_report.ir_family.participant_family.proband.surname,
+                            vcenter_format)
+            worksheet.write('F' + str(row_count),
+                            report.interpretation_report.ir_family.participant_family.proband.sex, vcenter_format)
+            worksheet.write('G' + str(row_count),
+                            report.interpretation_report.ir_family.participant_family.proband.date_of_birth.date(),
+                            vcenter_date_format)
+            worksheet.write('H' + str(row_count),
+                            report.interpretation_report.ir_family.participant_family.proband.nhs_number,
+                            vcenter_format)
+            worksheet.write('I' + str(row_count),
+                            report.interpretation_report.ir_family.participant_family.gel_family_id, vcenter_format)
+            worksheet.write('J' + str(row_count),
+                            report.interpretation_report.ir_family.participant_family.clinician.name,
+                            vcenter_format)
+            worksheet.write('K' + str(row_count),
+                            report.interpretation_report.ir_family.participant_family.proband.recruiting_disease,
+                            vcenter_format)
+            worksheet.write('L' + str(row_count),
+                            report.interpretation_report.ir_family.participant_family.proband.disease_subtype,
+                            vcenter_format)
+            row_count += 1
+    elif mdt_instance.sample_type == 'raredisease':
+        for report in mdt_reports:
+            proband_variants = ProbandVariant.objects.filter(interpretation_report=report.interpretation_report)
+            panels = InterpretationReportFamilyPanel.objects.filter(ir_family=report.interpretation_report.ir_family)
+            pv_output = []
+            for proband_variant in proband_variants:
+                transcript = proband_variant.get_transcript()
+                transcript_variant = proband_variant.get_transcript_variant()
+                if transcript and transcript_variant:
+                    hgvs_c = None
+                    hgvs_p = None
+                    hgvs_c_split = transcript_variant.hgvs_c.split(':')
+                    hgvs_p_split = transcript_variant.hgvs_p.split(':')
+                    if len(hgvs_c_split) > 1:
+                        hgvs_c = hgvs_c_split[1]
+                    if len(hgvs_p_split) > 1:
+                        hgvs_p = hgvs_p_split[1].replace('%3D', '=')
+                    pv_output.append({'variant': f'{transcript.gene}, '
+                                     f'{hgvs_c}, '
+                                     f'{hgvs_p}, ',
+                                     'inheritance': f'{proband_variant.inheritance}',
+                                     'proband_zygosity': f'{proband_variant.zygosity}',
+                                     'mat_zygosity': f'{proband_variant.maternal_zygosity}',
+                                     'pat_zygosity': f'{proband_variant.paternal_zygosity}',})
+            panel_names = []
+            for panel in panels:
+                panel_names.append(f'{panel.panel.panel.panel_name}_'
+                                   f'{panel.panel.version_number}')
+
+            v_rows = row_count
+            for variant in pv_output:
+                worksheet.write('L' + str(v_rows), variant['variant'])
+                worksheet.write('M' + str(v_rows), variant['inheritance'])
+                worksheet.write('N' + str(v_rows), variant['proband_zygosity'])
+                worksheet.write('O' + str(v_rows), variant['mat_zygosity'])
+                worksheet.write('P' + str(v_rows), variant['pat_zygosity'])
+                worksheet.data_validation('Q' + str(v_rows),
+                    {'validate': 'list', 'source': ['Yes', 'No', 'Maybe']})
+                worksheet.data_validation('R' + str(v_rows),
+                    {'validate': 'list', 'source': ['Yes', 'No']})
+                v_rows += 1
+
+            if row_count == v_rows - 1:
+                worksheet.write('A' + str(row_count),
+                                report.interpretation_report.ir_family.participant_family.proband.gel_id, vcenter_format)
+                worksheet.write('B' + str(row_count),
+                                report.interpretation_report.ir_family.ir_family_id, vcenter_format)
+                worksheet.write('C' + str(row_count),
+                                report.interpretation_report.ir_family.participant_family.proband.gmc, vcenter_format)
+                worksheet.write('D' + str(row_count),
+                    report.interpretation_report.ir_family.participant_family.proband.forename, vcenter_format)
+                worksheet.write('E' + str(row_count),
+                    report.interpretation_report.ir_family.participant_family.proband.surname, vcenter_format)
+                worksheet.write('F' + str(row_count),
+                    report.interpretation_report.ir_family.participant_family.proband.sex, vcenter_format)
+                worksheet.write('G' + str(row_count),
+                    report.interpretation_report.ir_family.participant_family.proband.date_of_birth.date(), vcenter_date_format)
+                worksheet.write('H' + str(row_count),
+                    report.interpretation_report.ir_family.participant_family.proband.nhs_number, vcenter_format)
+                worksheet.write('I' + str(row_count),
+                    report.interpretation_report.ir_family.participant_family.gel_family_id, vcenter_format)
+                worksheet.write('J' + str(row_count),
+                    report.interpretation_report.ir_family.participant_family.clinician.name, vcenter_format)
+                worksheet.write('K' + str(row_count),
+                    '\n'.join(panel_names), vcenter_format)
+            else:
+                worksheet.merge_range('A' + str(row_count) + ':A' + str(v_rows - 1),
+                                      report.interpretation_report.ir_family.participant_family.proband.gel_id,
+                                      vcenter_format)
+                worksheet.merge_range('B' + str(row_count) + ':B' + str(v_rows - 1),
+                                      report.interpretation_report.ir_family.ir_family_id,
+                                      vcenter_format)
+                worksheet.merge_range('C' + str(row_count) + ':C' + str(v_rows - 1),
+                                      report.interpretation_report.ir_family.participant_family.proband.gmc,
+                                      vcenter_format)
+                worksheet.merge_range('D' + str(row_count) + ':D' + str(v_rows-1),
+                    report.interpretation_report.ir_family.participant_family.proband.forename,
+                    vcenter_format)
+                worksheet.merge_range('E' + str(row_count) + ':E' + str(v_rows-1),
+                    report.interpretation_report.ir_family.participant_family.proband.surname,
+                    vcenter_format)
+                worksheet.merge_range('F' + str(row_count) + ':F' + str(v_rows-1),
+                    report.interpretation_report.ir_family.participant_family.proband.sex,
+                    vcenter_format)
+                worksheet.merge_range('G' + str(row_count) + ':G' + str(v_rows-1),
+                    report.interpretation_report.ir_family.participant_family.proband.date_of_birth.date(),
+                    vcenter_date_format)
+                worksheet.merge_range('H' + str(row_count) + ':H' + str(v_rows-1),
+                    report.interpretation_report.ir_family.participant_family.proband.nhs_number,
+                    vcenter_format)
+                worksheet.merge_range('I' + str(row_count) + ':I' + str(v_rows-1),
+                    report.interpretation_report.ir_family.participant_family.gel_family_id,
+                    vcenter_format)
+                worksheet.merge_range('J' + str(row_count) + ':J' + str(v_rows-1),
+                    report.interpretation_report.ir_family.participant_family.clinician.name,
+                    vcenter_format)
+                worksheet.merge_range('K' + str(row_count) + ':K' + str(v_rows-1),
+                    '\n'.join(panel_names),
+                    vcenter_format)
+
+            row_count = v_rows
+
+    workbook.close()
+    # rewind the buffer
+    output.seek(0)
+    return output
+
+
+def monthly_not_completed():
+    all_mdts = MDT.objects.all()
+    workbook = xlsxwriter.Workbook("monthly_results.xlsx")
+    worksheet = workbook.add_worksheet('Summary')
+    months = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'June', 7: 'July', 8: 'Aug', 9: 'Sep', 10: 'Oct',
+              11: 'Nov', 12: 'Dec'}
+    years = ['2017', '2018', '2019', '2020']
+    month_count = 0
+    for year in years:
+        for month in months:
+            completed_cases = []
+            notcompleted_cases = []
+            worksheet.write(0, month_count, f"{year}_{months[month]}")
+            month_mdts = all_mdts.filter(date_of_mdt__year=year, date_of_mdt__month=month)
+            for mdt in month_mdts:
+                for report in mdt.mdtreport_set.all():
+                    if report.interpretation_report.case_status != 'C':
+                        notcompleted_cases.append(report)
+                    else:
+                        completed_cases.append(report)
+            worksheet.write(1, month_count, f"Completed Count: ")
+            worksheet.write(2, month_count, len(completed_cases))
+            worksheet.write(1, month_count + 1, f"Not Completed Count: ")
+            worksheet.write(2, month_count + 1, len(notcompleted_cases))
+            if notcompleted_cases:
+                worksheet.write(4, month_count + 1, 'Participant IDs')
+            row = 5
+            for case in notcompleted_cases:
+                try:
+                    worksheet.write(row, month_count + 1,
+                                    f"{case.interpretation_report.ir_family.participant_family.proband.gel_id}; "
+                                    f"{case.interpretation_report.ir_family.participant_family.clinician.name}")
+                    row += 1
+                except Proband.DoesNotExist:
+                    pass
+            month_count += 2
+    workbook.close()
+    return workbook
 
 
 def write_mdt_outcome_template(report):
@@ -86,6 +313,21 @@ def write_mdt_outcome_template(report):
     header_image.alignment = WD_ALIGN_PARAGRAPH.RIGHT 
  
     document.add_heading('Genomics MDM record', 0)
+
+    table = document.add_table(rows=1, cols=1, style='Table Grid')
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    run = table.rows[0].cells[0].paragraphs[0].add_run('THIS IS NOT A DIAGNOSTIC REPORT. UNVALIDATED FINDINGS SHOULD NOT BE USED TO INFORM CLINICAL MANAGEMENT DECISIONS.\n')
+    run.font.color.rgb = RGBColor(255, 0, 0)
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        'This is a record of unvalidated variants identified through the 100,000 genome project.\n'
+        'Class 3 variants are of uncertain clinical significance, future review and diagnostic confirmation may '
+        'be appropriate if further evidence becomes available.\n')
+    run.font.color.rgb = RGBColor(255, 0, 0)
+
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.3)
+    paragraph = document.add_paragraph()
+    paragraph.add_run()
 
     table = document.add_table(rows=2, cols=4, style='Table Grid')
     heading_cells = table.rows[0].cells
@@ -166,6 +408,8 @@ def write_mdt_outcome_template(report):
         cells = table.add_row().cells
         transcript = proband_variant.get_transcript()
         transcript_variant = proband_variant.get_transcript_variant()
+        if transcript is None or transcript_variant is None:
+            raise ValueError(f"Please select transcripts for all variants before exporting\n")
         rdr = proband_variant.create_rare_disease_report()
         run = cells[0].paragraphs[0].add_run(str(transcript.gene))
         run.font.size = Pt(7)

@@ -23,7 +23,7 @@ services:
     restart: always
     build:
       context: .
-    command: bash -c ". /root/gel2mdt/Docker/startup_script.sh && cd /root/gel2mdt/gelweb && gunicorn gelweb.wsgi -b 0.0.0.0:8000"
+    command: bash -c ". /root/gel2mdt/Docker/startup_script.sh && cd /root/gel2mdt/gelweb && gunicorn gelweb.wsgi --workers=9 -t 90 -b 0.0.0.0:8000"
     volumes:
       - .:/root/gel2mdt/
       - /var/app/vep/:/root/.vep
@@ -75,6 +75,8 @@ services:
     build: .
     image: gel2mdt_flower
     restart: always
+    volumes:
+      - .:/root/gel2mdt/
     command: bash -c "cd /root/gel2mdt/gelweb && celery flower -A gelweb --broker=redis://redis:6379 --port=5550"
     ports:
       - "5500:5550"
