@@ -246,8 +246,8 @@ def report_export_for_rakib():
         except Proband.DoesNotExist:
             pass
     output.close()
-    subject, from_email, to = f'GeL2MDT Case Export', 'bioinformatics@gosh.nhs.uk', \
-                              'Rakib.Miah@gosh.nhs.uk'
+    subject, from_email, to = f'GeL2MDT Case Export', 'gel2mdt.technicalsupport@nhs.net', \
+                              'rakib.miah1@nhs.net'
     text_content = f'Please see attached report'
     try:
         msg = EmailMessage(subject, text_content, from_email, [to])
@@ -282,18 +282,9 @@ def case_alert_email():
                         sample_types[s_type] = True
                 except Proband.DoesNotExist:
                     pass
-
-    text_content = ''
     if sample_types['cancer'] or sample_types['raredisease']:
-        for s_type in sample_types:
-            if matching_cases[s_type]:
-                text_content += f'{s_type.title()} Case Alert:\n'
-                for case in matching_cases[s_type]:
-                    case_alert = CaseAlert.objects.get(id=case)
-                    if matching_cases[s_type][case]:
-                        text_content += f'Case {case_alert.gel_id} with CIP-ID of {matching_cases[s_type][case][0][1]} ' \
-                                        f'has been added to the database. CaseAlert comment: {case_alert.comment}\n'
-        subject, from_email, to = f'GeL2MDT CaseAlert', 'bioinformatics@gosh.nhs.uk', 'GELTeam@gosh.nhs.uk'
+        text_content = "A Case Alert has been triggered, please visit GEL2MDT to check and remove this alert!"
+        subject, from_email, to = f'GeL2MDT CaseAlert', 'gel2mdt.technicalsupport@nhs.net', 'GELTeam@gosh.nhs.uk'
         msg = EmailMessage(subject, text_content, from_email, [to])
         try:
             msg.send()
