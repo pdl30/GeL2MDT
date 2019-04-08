@@ -222,3 +222,4 @@ NOTEBOOK_ARGUMENTS = [
     '--no-browser',
     '--allow-root'
 ]
+SESSION_COOKIE_AGE = 60 * 60 * 12 # sec * min * hrs
