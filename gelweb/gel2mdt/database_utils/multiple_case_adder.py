@@ -219,8 +219,9 @@ class MultipleCaseAdder(object):
             listupdate.reports_added.add(*added_cases)
             listupdate.reports_updated.add(*updated_cases)
 
-            self.deselect_ensembl_transcripts(added_cases)
-            self.deselect_ensembl_transcripts(updated_cases)
+            if self.sample_type == 'raredisease':
+                self.deselect_ensembl_transcripts(added_cases)
+                self.deselect_ensembl_transcripts(updated_cases)
 
     def deselect_ensembl_transcripts(self, cases):
         for case in cases:
