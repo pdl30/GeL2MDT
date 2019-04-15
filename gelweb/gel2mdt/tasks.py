@@ -39,6 +39,15 @@ from bokeh.plotting import figure
 from django.core.mail import EmailMessage
 from reversion.models import Version, Revision
 from protocols.reports_6_0_0 import InterpretedGenome, InterpretationRequestRD, CancerInterpretationRequest, ClinicalReport
+from django.utils import timezone
+import csv
+import xlsxwriter
+from datetime import date
+from django.db.models import Sum
+import datetime
+from django.contrib.auth.models import User, Group
+from .sv_extraction.filter_sv import SVFiltration
+import gc
 from django.db.utils import ProgrammingError, OperationalError
 
 
@@ -223,6 +232,22 @@ def panel_app(gene_panel, gp_version):
     return gene_panel_info
 
 
+def sv_extraction(writer, report_id):
+    '''
+    Takes the SV extraction package and ties it to a button
+    :param report_id:
+    :return:
+    '''
+    report = GELInterpretationReport.objects.get(id=report_id)
+    ir, ir_version = report.ir_family.ir_family_id.split('-')
+    SVFiltration(ir=ir, ir_version=ir_version, test_data=False)
+    with open(f"output/{report.ir_family.ir_family_id}.supplementary.filtered_sv_table.csv") as f:
+        csv_reader = csv.reader(f, delimiter=',')
+        for row in csv_reader:
+            writer.writerow(row)
+    return writer
+
+
 @task
 def update_for_t3(report_id):
     '''
@@ -235,6 +260,100 @@ def update_for_t3(report_id):
                       pullt3=True,
                       sample=report.ir_family.participant_family.proband.gel_id)
 
+
+@task
+def report_export_for_rakib():
+    rd_irs = GELInterpretationReport.objects.latest_cases_by_sample_type('raredisease')
+    cancer_irs = GELInterpretationReport.objects.latest_cases_by_sample_type('cancer')
+    output = open('GEL2MDT_export.csv', 'w')
+    output.write('CIP ID,GEL Participant ID,Case Status,Disease,Disease subtype,LDP,SampleType\n')
+    for q in rd_irs:
+        try:
+            output.write(f'{q.ir_family.ir_family_id},{q.ir_family.participant_family.proband.gel_id},'
+                         f'{q.get_case_status_display()},{q.ir_family.participant_family.proband.recruiting_disease},'
+                         f'{q.ir_family.participant_family.proband.disease_subtype},'
+                         f'{q.ir_family.participant_family.proband.gmc},RareDisease\n')
+        except Proband.DoesNotExist:
+            pass
+    for q in cancer_irs:
+        try:
+            output.write(f'{q.ir_family.ir_family_id},{q.ir_family.participant_family.proband.gel_id},'
+                         f'{q.get_case_status_display()},{q.ir_family.participant_family.proband.recruiting_disease},'
+                         f'{q.ir_family.participant_family.proband.disease_subtype},'
+                         f'{q.ir_family.participant_family.proband.gmc},Cancer\n')
+        except Proband.DoesNotExist:
+            pass
+    output.close()
+    subject, from_email, to = f'GeL2MDT Case Export', 'gel2mdt.technicalsupport@nhs.net', \
+                              'rakib.miah1@nhs.net'
+    text_content = f'Please see attached report'
+    try:
+        msg = EmailMessage(subject, text_content, from_email, [to])
+        msg.attach_file("GEL2MDT_export.csv")
+        msg.send()
+        os.remove('GEL2MDT_export.csv')
+    except Exception as e:
+        print(e)
+
+
+@task
+def case_alert_email():
+    '''
+    Utility function designed to be run with celery. Emails GELTeam nightly about CaseAlert cases
+    :param report_id: GEL InterpretationReport ID
+    :return: Nothing
+    '''
+    sample_types = {'raredisease': False, 'cancer': False}
+    matching_cases = {}
+    for s_type in sample_types:
+        case_alerts = CaseAlert.objects.filter(sample_type=s_type)
+        gel_reports = GELInterpretationReport.objects.latest_cases_by_sample_type(
+            sample_type=s_type).prefetch_related('ir_family__participant_family__proband')
+        matching_cases[s_type] = {}
+        for case in case_alerts:
+            matching_cases[s_type][case.id] = []
+            for report in gel_reports:
+                try:
+                    if report.ir_family.participant_family.proband.gel_id == str(case.gel_id):
+                        matching_cases[s_type][case.id].append((report.id,
+                                                                report.ir_family.ir_family_id))
+                        sample_types[s_type] = True
+                except Proband.DoesNotExist:
+                    pass
+    if sample_types['cancer'] or sample_types['raredisease']:
+        text_content = "A Case Alert has been triggered, please visit GEL2MDT to check and remove this alert!"
+        subject, from_email, to = f'GeL2MDT CaseAlert', 'gel2mdt.technicalsupport@nhs.net', 'GELTeam@gosh.nhs.uk'
+        msg = EmailMessage(subject, text_content, from_email, [to])
+        try:
+            msg.send()
+        except Exception as e:
+            pass
+
+
+@task
+def listupdate_email():
+    '''
+    Utility function which sends emails to admin about last nights update
+    :return:
+    '''
+    send = False
+    bioinfo_content = 'Sample Type\tUpdate Time\tNo. Cases Added\tNo. Cases Updated\tError\n'
+    for i, sample_type in enumerate(['raredisease', 'cancer']):
+        listupdates = ListUpdate.objects.filter(update_time__gte=date.today()).filter(sample_type=sample_type)
+        if listupdates:
+            send = True
+        for update in listupdates:
+            bioinfo_content += f'{update.sample_type}\t{update.update_time}' \
+                               f'\t{update.cases_added}\t{update.cases_updated}\t{update.error}\n'
+    if send:
+        subject, from_email, to = 'GeL2MDT ListUpdate', 'gel2mdt.technicalsupport@nhs.net', \
+                                  'bioinformatics@gosh.nhs.uk'
+        msg = EmailMessage(subject, bioinfo_content, from_email, [to])
+        try:
+            msg.send()
+        except Exception:
+            pass
+
 @task
 def update_cases():
     '''
@@ -242,8 +361,9 @@ def update_cases():
     the database with new cases
     :return:
     '''
-    MultipleCaseAdder(sample_type='raredisease', pullt3=False, skip_demographics=False)
+    MultipleCaseAdder(sample_type='raredisease', bins=300, pullt3=False, skip_demographics=False)
     MultipleCaseAdder(sample_type='cancer', pullt3=False, skip_demographics=False)
+    gc.collect()
 
 
 class VariantAdder(object):
@@ -511,7 +631,7 @@ class UpdateDemographics(object):
             proband.nhs_number = participant_demographics['nhs_num']
             proband.surname = participant_demographics['surname']
             proband.forename = participant_demographics['forename']
-            proband.date_of_birth = datetime.strptime(participant_demographics["date_of_birth"],
+            proband.date_of_birth = datetime.datetime.strptime(participant_demographics["date_of_birth"],
                                                                "%Y/%m/%d").date()
             proband.recruiting_disease = recruiting_disease
             proband.gmc = self.clinician.hospital
