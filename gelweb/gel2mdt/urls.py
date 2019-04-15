@@ -95,6 +95,8 @@ urlpatterns = [
     path('delete_comment/<int:comment_id>', views.delete_comment, name='delete-comment'),
     path('edit_comment/<int:comment_id>', views.edit_comment, name='edit-comment'),
     path('delete_case_alert/<int:case_alert_id>', views.delete_case_alert, name='delete-case-alert'),
+    path('run_sv_extraction/<int:report_id>', views.run_sv_extraction, name='run-sv-extraction'),
+    path('export_monthly_report/', views.export_monthly_report, name='export_monthly_report'),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_DIR)
 
 urlpatterns += api_urlpatterns

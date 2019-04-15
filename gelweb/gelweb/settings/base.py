@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/2.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.0/ref/settings/
 """
-
+from django.conf import settings
 import os
 import sys
 from django.contrib.messages import constants as messages
@@ -17,7 +17,7 @@ from datetime import datetime
 
 # Check that the expected local_settings values are present
 try:
-    from .local_settings import SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASES, ADDITIONAL_APPS
+    from .local_settings import *
 except ImportError:
     print('Check the following settings are present in local_settings.py:\n'
           'SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASES, ADDITIONAL_APPS')
@@ -100,6 +100,8 @@ NOSE_ARGS = [
 # https://docs.djangoproject.com/en/2.0/topics/logging/
 datetime_str_format = datetime.strftime(datetime.now(), '%Y-%m-%d')
 
+
+
 LOGGING = {
     'version': 1,
     'formatters': {
@@ -112,9 +114,18 @@ LOGGING = {
     },
     'handlers': {
         'console': {
-                'level': 'DEBUG',
-                'class': 'logging.StreamHandler',
-                'formatter': 'simple'
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+        },
+        'mail_managers': {
+            'level': 'ERROR',
+            'class': 'gel2mdt.email_handler.ManagerEmailHandler',
+            'include_html': False
         },
         'file': {
             'level': 'DEBUG',
@@ -130,6 +141,16 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
+        'django.request': {
+            'handlers': ['mail_admins', 'mail_managers'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'gelweb.custom': {
+            'handlers': ['console', 'mail_admins', 'mail_managers'],
+            'level': 'INFO',
+        },
+
     }
 }
 #ssh
@@ -200,3 +221,4 @@ NOTEBOOK_ARGUMENTS = [
     '--no-browser',
     '--allow-root'
 ]
+SESSION_COOKIE_AGE = 60 * 60 * 12 # sec * min * hrs

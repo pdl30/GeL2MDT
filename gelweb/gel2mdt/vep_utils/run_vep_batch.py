@@ -119,7 +119,6 @@ def run_vep(infile, config_dict):
     # run VEP for hg19 variants
     annotated_variant_dict = {}
 
-
     if os.stat(hg19_vcf).st_size != 0: # if file not empty
         # builds command from locations supplied in config file
         cmd = "{vep} -i {infile} -o {outfile} --species homo_sapiens --force_overwrite --cache --dir_cache {cache} " \
@@ -134,7 +133,7 @@ def run_vep(infile, config_dict):
         )
         if config_dict["mergedVEP"] == 'True':
             cmd += ' --merged'
-            subprocess.run(cmd, stderr=subprocess.STDOUT, shell=True, check=True)
+        subprocess.run(cmd, stderr=subprocess.STDOUT, shell=True, check=True)
         annotated_variant_dict['hg19_vep'] = hg19_outfile.name
     # run VEP for hg38 variants
     if os.stat(hg38_vcf).st_size != 0:
@@ -150,6 +149,7 @@ def run_vep(infile, config_dict):
         )
         if config_dict["mergedVEP"] == 'True':
             cmd += ' --merged'
+
         subprocess.run(cmd, stderr=subprocess.STDOUT, shell=True, check=True)
         annotated_variant_dict['hg38_vep'] = hg38_outfile.name
     return annotated_variant_dict
