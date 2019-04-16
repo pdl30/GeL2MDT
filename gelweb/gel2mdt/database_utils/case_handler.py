@@ -433,7 +433,6 @@ class CaseAttributeManager(object):
                 except IndexError as e:
                     pass
         if self.case.json["proband"] in self.case.gmc_dict:
-            print(clinician_details['hospital'], self.case.ir_obj.workspace[0])
             clinician_details['hospital'] = self.case.gmc_dict[self.case.json['proband']]
         elif self.case.ir_obj.workspace:
             clinician_details['hospital'] = self.case.ir_obj.workspace[0]
