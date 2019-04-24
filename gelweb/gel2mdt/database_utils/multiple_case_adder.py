@@ -224,6 +224,11 @@ class MultipleCaseAdder(object):
                 self.deselect_ensembl_transcripts(updated_cases)
 
     def deselect_ensembl_transcripts(self, cases):
+        """
+        Deselects canonical ensembl transcripts which leaves just the refseq transcripts for RD cases
+        :param cases: List of RD cases which have been updated/added
+        :return:
+        """
         for case in cases:
             proband_variants = case.probandvariant_set.all()
             for pv in proband_variants:
