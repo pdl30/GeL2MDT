@@ -35,6 +35,7 @@ import copy
 import pprint
 from tqdm import tqdm
 from protocols.reports_6_0_0 import InterpretedGenome, InterpretationRequestRD, CancerInterpretationRequest, ClinicalReport
+import csv
 
 
 class Case(object):
@@ -161,6 +162,9 @@ class Case(object):
         # are missing dependencies)
         self.skip_demographics = skip_demographics
         self.attribute_managers = {}
+        gmc_file = open('genie_dumps/190416_genie_gmc_dump.csv', encoding='utf-8-sig')
+        gmc_raw_dict = csv.DictReader(gmc_file)
+        self.gmc_dict = {key['ParticipantID']: key['OrgCode'] for key in gmc_raw_dict}
 
     def hash_json(self):
         """
@@ -428,7 +432,9 @@ class CaseAttributeManager(object):
                                 'consultant_details_full_name_of_responsible_consultant')
                 except IndexError as e:
                     pass
-        if self.case.ir_obj.workspace:
+        if self.case.json["proband"] in self.case.gmc_dict:
+            clinician_details['hospital'] = self.case.gmc_dict[self.case.json['proband']]
+        elif self.case.ir_obj.workspace:
             clinician_details['hospital'] = self.case.ir_obj.workspace[0]
         else:
             clinician_details['hospital'] = 'unknown'
@@ -963,9 +969,10 @@ class CaseAttributeManager(object):
         has_germline_variant = False
         if self.case.json['sample_type'] == 'cancer':
             for ig_obj in self.case.ig_objs:
-                alleleorigins = [variant.variantAttributes.alleleOrigins[0] for variant in ig_obj.variants]
-                if "germline_variant" in alleleorigins:
-                    has_germline_variant = True
+                if ig_obj.variants:
+                    alleleorigins = [variant.variantAttributes.alleleOrigins[0] for variant in ig_obj.variants]
+                    if "germline_variant" in alleleorigins:
+                        has_germline_variant = True
 
         ir = CaseModel(GELInterpretationReport, {
             "ir_family": ir_family.entry,

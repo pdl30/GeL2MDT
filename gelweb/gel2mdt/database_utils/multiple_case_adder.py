@@ -219,7 +219,27 @@ class MultipleCaseAdder(object):
             listupdate.reports_added.add(*added_cases)
             listupdate.reports_updated.add(*updated_cases)
 
-            # Add in case alert
+            if self.sample_type == 'raredisease':
+                self.deselect_ensembl_transcripts(added_cases)
+                self.deselect_ensembl_transcripts(updated_cases)
+
+    def deselect_ensembl_transcripts(self, cases):
+        """
+        Deselects canonical ensembl transcripts which leaves just the refseq transcripts for RD cases
+        :param cases: List of RD cases which have been updated/added
+        :return:
+        """
+        for case in cases:
+            proband_variants = case.probandvariant_set.all()
+            for pv in proband_variants:
+                ptvs = pv.probandtranscriptvariant_set.filter(selected=True)
+                for ptv in ptvs:
+                    if not ptv.proband_variant.variant.chromosome.startswith('M'):
+                        one_refseq = [probandtv for probandtv in ptvs if probandtv.transcript.name.startswith("N")]
+                        if one_refseq and len(ptvs) >= 2:
+                            if ptv.transcript.name.startswith('ENST'):
+                                ptv.selected = False
+                                ptv.save()
 
     def fetch_test_data(self):
         """
