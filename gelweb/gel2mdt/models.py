@@ -357,6 +357,8 @@ class GELInterpretationReport(models.Model):
         ('REANALYSE', 'REANALYSE'), ('URGENT', 'URGENT'),
         ('SAMPLE', 'SAMPLE'),
         ('CLINGEN', 'CLINGEN'),
+        ('DECEASED', 'DECEASED'),
+        ('DNAREQ', 'DNAREQ'),
         ('RETURN', 'RETURN')),)
     first_check = models.ForeignKey(
         settings.AUTH_USER_MODEL,
