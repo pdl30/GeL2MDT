@@ -23,7 +23,7 @@ from .models import *
 import csv
 import xlsxwriter
 import io
-from docx import Document, oxml
+from docx import Document, oxml, opc
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from django.conf import settings
@@ -605,11 +605,13 @@ def write_gtab_template(report):
 
     table = document.add_table(rows=7, cols=2, style='Table Grid')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
-        f'Disease Type:\t\t')
+        f'Disease Type:\t\t'
+        f'{report.ir_family.participant_family.proband.disease_group}')
     run = table.rows[0].cells[1].paragraphs[0].add_run(
         f'GEL Version Number:\t\t')
     run = table.rows[1].cells[0].paragraphs[0].add_run(
-        f'Disease Subtype:\t\t')
+        f'Disease Subtype:\t\t'
+        f'{report.ir_family.participant_family.proband.disease_subtype}')
     run = table.rows[1].cells[1].paragraphs[0].add_run(
         f'Multiple Samples:\t\t')
     run = table.rows[2].cells[0].paragraphs[0].add_run(
@@ -734,10 +736,18 @@ def write_gtab_template(report):
             table.rows[0].cells[0].paragraphs[0].add_run(f"{count}) {transcript.gene} {hgvs_c} {hgvs_p} VAF: XX\n"
                                                          f"Transcript: {transcript.name}\n\n")
             count += 1
-    table.rows[0].cells[0].paragraphs[0].add_run("\n")
-    run = table.rows[0].cells[0].paragraphs[0].add_run("Domain 2 "
-                                                       "(variants in genes within the Cancer Gene Census- Wellcome "
-                                                       "Trust Sanger Institute):\n")
+    
+    run = table.rows[0].cells[0].paragraphs[0].add_run("Domain 2 ")
+    run.underline = True
+    run.font.bold = True
+    run.font.size = Pt(10)    
+    
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f"(variants in a broad panel of cancer-related genes listed in the cancer genome "
+        f"analysis documents):\n\n")
+    run.underline = True
+    run.font.size = Pt(10)
+
     count = 1
     for proband_variant in proband_variants:
         if proband_variant.max_tier == 2 and proband_variant.somatic is True:
@@ -762,19 +772,44 @@ def write_gtab_template(report):
             table.rows[0].cells[0].paragraphs[0].add_run(f"{count}) {transcript.gene} {hgvs_c} {hgvs_p} VAF: XX\n"
                                                          f"Transcript: {transcript.name}\n\n")
             count += 1
-    run.underline=True
-    run.font.size = Pt(9)
-    run = table.rows[0].cells[0].paragraphs[0].add_run("Note: Please see individual "
-                                                       "variant for assessment of pathogenicity\n\n")
-
+    
+    # Section. GERMLINE VARIANTS
     table = document.add_table(rows=1, cols=1, style='Table Grid')
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run = table.rows[0].cells[0].paragraphs[0].add_run(
-        "FOR RESEARCH PURPOSES ONLY- THESE RESULTS HAVE NOT BEEN VALIDATED\n")
-    run.font.color.rgb = RGBColor(255, 0, 0)
-    run = table.rows[0].cells[0].paragraphs[0].add_run("ADDITIONAL FINDINGS\n\n")
-    run.underline=True
-    run = table.rows[0].cells[0].paragraphs[0].add_run("Cancer Pertinent Germline Susceptibility\n\n")
-    run.underline=True
+        "\t\tFOR RESEARCH PURPOSES ONLY- THESE RESULTS HAVE NOT BEEN VALIDATED\n\n")
+    run.font.color.rgb = RGBColor(210, 42, 42)
+    run.font.bold = True
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f"GERMLINE VARIANTS\n\n")
+    run.underline = True
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.2)
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
+
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f"Germline variants in cancer susceptibility genes are divided into Tier 1 and Tier 3. "
+        f"Tier 1 includes all truncating variants (in loss of function gene) and/or listed in "
+        f"ClinVar to be pathogenic or likely pathogenic with a rating of at least two stars, detected "
+        f"in cancer susceptibility genes relevant to the disease type. Tier 3 includes rare variants "
+        f"that are not listed in ClinVar as benign or likely benign with a rating of at least two stars, "
+        f"detected in a larger set of cancer susceptibility genes, listed in the cancer genome analysis "
+        f"documents. Review of Tier 3 germline variants is not anticipated or required. Tier 3 variants "
+        f"detected in cancer susceptibility genes relevant to the disease type are further investigated. "
+        f"Interpretation of other Tier 3 variants can be requested if the variant is called in an "
+        f"under-reported gene and/or in cases in which there is a high index of suspicion of a germline "
+        f"determinant of cancer in the patient and/or family. Only germline variants classified as "
+        f"‘likely pathogenic’ or ‘pathogenic’ are retained on the GTAB Summary Sheet at the point of "
+        f"reporting.\n\n")
+    run.font.size = Pt(8)
+
+    run = table.rows[0].cells[0].paragraphs[0].add_run("Tier 1\n\n")
+    run.font.underline = True
+    run.font.bold = True
+    run = table.rows[0].cells[0].paragraphs[0].add_run("Tier 3\n\n")
+    run.font.underline = True
+    run.font.bold = True
     count = 1
     for proband_variant in proband_variants:
         if proband_variant.somatic is False:
@@ -800,101 +835,121 @@ def write_gtab_template(report):
                                                          f"Transcript: {transcript.name}\n\n")
             count += 1
     run.italic=True
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Tier 1 includes variants deemed to be pathogenic or likely "
-                                                        "pathogenic in cancer susceptibility genes relevant to "
-                                                        "tumour type.\nTier 3 contains all rare variants arising across"
-                                                        " a large set of cancer susceptibility genes. Review of Tier "
-                                                        "3 germline variants is not required routinely but should be "
-                                                        "considered in cases in which there is a high index of "
-                                                        "suspicion of a germline determinant of cancer in the patient "
-                                                        "and/or family. \n\n")
-    run.font.size=Pt(5)
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Circos Plot (genome-wide visualisation of "
-                                                        "somatic variants and sequencing depth)\n\n")
-    run.underline=True
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Copy and paste image of circus plot\n\n")
-    run.italic=True
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "This plot illustrates the distribution of "
-                                                        "somatic variants across the genome with each concentric "
-                                                        "circle (track) representing a different class of variant.\n"
-                                                        "Chromosomes are arranged sequentially around the "
-                                                        "circumference "
-                                                        "as indicated. The information presented in each track is as "
-                                                        "follows:\nTrack 1 (innermost track): chromosomes\nTrack 2 "
-                                                        "(in red): number of somatic SNVs in 2Mb window; scale from"
-                                                        " 0 to 100\nTrack 3 (in green): number of somatic indels in "
-                                                        "2Mb window; scale from 0 to 35\nTrack 4: ratio of normalised "
-                                                        "depth of coverage for tumour vs normal in log2 scale smoothed "
-                                                        "over 100 kb windows. Diploid regions have value of 0. Scale is"
-                                                        " between -2 and 2. Regions with coverage below 15x in "
-                                                        "germline are not shown. CNV losses are indicated in red, "
-                                                        "CNV gains are "
-                                                        "indicated in green, copy-neutral LOH regions are indicated in "
-                                                        "yellow.\nTrack 5 (outermost track, in blue): absolute depth "
-                                                        "of coverage in tumour sample\nStructural variants (SVs) are "
-                                                        "indicated by arcs inside the plot; translocations are "
-                                                        "indicated in green, inversions are indicated in purple. SVs "
-                                                        "shorter than 100 kb and insertions are not plotted.\n\n\n")
-    run.font.size = Pt(4)
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Structural Variants\n")
-    run.underline=True
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Translocations involving 2 or more "
-                                                        "named genes:\n\n")
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Copy and paste structural variants table\n\n")
-    run.italic=True
+    
+    # Section. COPY NUMBER VARIANTS AND STRUCTURAL VARIANTS
+    table = document.add_table(rows=1, cols=1, style='Table Grid')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        "\t\tFOR RESEARCH PURPOSES ONLY - THESE RESULTS HAVE NOT BEEN VALIDATED\n\n")
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.2)
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
+    run.font.color.rgb = RGBColor(210, 42, 42)
+    run.bold = True
+    run.font.size = Pt(10)
 
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Searched for copy number variants:\n\n")
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Copy and paste structural "
-                                                        "variants table\n\n")
-    run.italic=True
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Somatic CNVs and SVs variants have not "
-                                                        "been assigned to domains (see ‘Somatic Variants’ ‘Domain 1’ "
-                                                        "and ‘Domain 2’ above) whilst the performance (recall and "
-                                                        "precision) of the calling algorithm for CNVs and SVs is under"
-                                                        " evaluation.\nOnly SVs overlapping breakends with introns or "
-                                                        "exons are listed in the table above. Each row corresponds to "
-                                                        "one structural variant. Types of structural variants called "
-                                                        "by Canvas: GAIN(COPY NUMBER) = CNV gain, LOSS(COPY NUMBER) ="
-                                                        " CNV loss, LOH(COPY NUMBER) = loss of heterozygosity. Types "
-                                                        "of structural variants called by Manta: BND = translocation, "
-                                                        "DEL = deletion, DUP = duplication, INV = inversion, "
-                                                        "INS = insertion. Coordinate for the second breakend in "
-                                                        "translocation event captures replacement string, position and "
-                                                        "direction according to variant call format specification v4.3\n\n")
-    run.font.size = Pt(5)
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Mutation Burden\n")
-    run.underline=True
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Copy and paste mutation burden plot\n\n")
-    run.italic=True
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Total "
-                                                        "number of somatic non-synonymous small variants per megabase "
-                                                        "(coding region): XXX\n")
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "The vertical axis (log scaled) shows "
-                                                        "the number of somatic non-synonymous small variants per "
-                                                        "megabase of coding sequences. The dashed horizontal red line "
-                                                        "represents the total somatic mutation burden in this patients "
-                                                        "genome. Each sample in the 100,000 Genomes Cancer dataset is "
-                                                        "represented by a dot on the plot; different cancer types are "
-                                                        "ordered on the horizontal axis based on their median numbers "
-                                                        "of somatic mutations (short horizontal red line).\n\n\n")
-    run.font.size = Pt(5)
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Mutational Signature\n")
-    run.underline=True
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Copy and paste mutational signatures\n\n")
-    run.italic = True
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Further "
-                                                        "details of the 30 different mutational signatures used for "
-                                                        "this analysis, their prevalence in different tumour types "
-                                                        "and proposed aetiology can be found at the Sanger Institute "
-                                                        "Website- https://cancer.sanger.ac.uk/cosmic/signatures\n\n")
-    run.font.size = Pt(5)
-    run = table.rows[0].cells[0].paragraphs[0].add_run( "Pharmacogenomics\n\n")
-    run.underline=True
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        "COPY NUMBER VARIANTS AND STRUCTURAL VARIANTS\n\n")
+    run.font.underline = True
 
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f"Somatic copy number variants(CNVs) and structural variants (SVs) that have not been assigned to "
+        f"Domains (see ‘Somatic Variants’ ‘Domain 1’ and ‘Domain 2’ above) whilst the performance (recall "
+        f"and precision) of the calling algorithm for CNVs and SVs is under evaluation. Only SVs overlapping "
+        f"breakends with introns or exons are listed in the table below. Each row corresponds to one CNV or "
+        f"SV. Types of variants: GAIN(COPY NUMBER) = CNV gain, LOSS(COPY NUMBER) = CNV loss, "
+        f"LOH(COPY NUMBER)=loss of heterozygosity, BND=translocation, DEL=deletion, DUP=duplication, "
+        f"INV=inversion and INS=insertion. Coordinate for the second breakend in translocation event "
+        f"captures replacement string, position and direction according to variant call format specification v4.3.\n\n")
+    run.font.size = Pt(8)
+    
+    run=table.rows[0].cells[0].paragraphs[0].add_run(
+        "All copy number and structural variants involving named genes relevant to the disease type:\n\n\n\n")
+    run.font.size = Pt(10)
+
+    # Section. APPENDIX
+    table = document.add_table(rows=1, cols=1, style='Table Grid')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        "\t\tFOR RESEARCH PURPOSES ONLY - THESE RESULTS HAVE NOT BEEN VALIDATED\n\n")
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.2)
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
+    run.font.color.rgb = RGBColor(210, 42, 42)
+    run.font.size = Pt(10)
+    run.font.bold = True
+
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        "APPENDIX\n\n")
+    run.font.underline = True
+
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'1. The analysis pipeline used filters out variants that fail quality '
+        f'control thresholds, therefore absence of a variant does not indicate a '
+        f'negative result.\n')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'2. Technical information, including mutation burden calculation, for '
+        f'the cancer genome analysis can be found at the Genomics England 100,000 '
+        f'Genomes Project website - ')
+    run_hyper = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'https://www.genomicsengland.co.uk/about-genomics-england/the-100000-genomes-project/information-for-gmc-staff/cancer-programme/cancer-genome-analysis\n')
+    run_hyper.font.color.rgb = RGBColor(0, 0, 153)
+    run_hyper.font.underline = True
+    add_hyperlink_into_run(table.rows[0].cells[0].paragraphs[0], run_hyper, 'https://www.genomicsengland.co.uk/about-genomics-england/the-100000-genomes-project/information-for-gmc-staff/cancer-programme/cancer-genome-analysis')
+   
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'3. Further details on mutational signatures, their prevalence in different '
+        f'tumour types and proposed aetiology can be found at the Sanger COSMIC '
+        f'signatures website - https://cancer.sanger.ac.uk/cosmic/signatures\n')
+    #TODO: other hyperlinks required.
+    #run_hyper = table.rows[0].cells[0].paragraphs[0].add_run(
+    #    f'https://cancer.sanger.ac.uk/cosmic/signatures\n')
+    #run_hyper.font.color.rgb = RGBColor(0, 0, 153)
+    #run_hyper.font.underline = True
+    #add_hyperlink_into_run(table.rows[0].cells[0].paragraphs[0], run, 'https://cancer.sanger.ac.uk/cosmic/signatures')
+    
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'4. Alamut Visual v2.11 is used for information on variant population '
+        f'frequency, in silico prediction and splicing impact prediction.\n')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'5. COSMIC IDs and gene-level actionability are sourced from the GEL '
+        f'Associated Supplementary HTML.\n')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'6. Somatic variant-level actionability is sourced from the GEL Associated '
+        f'Supplementary HTML and/or if relevant to disease type https://www.mycancergenome.org/\n')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'7. Databases referenced include ClinVar, GeneCards, gnomAD, HGMD and OMIM.\n')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'8. Germline predefined gene list v1.0 for each disease type can be provided upon request.\n')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'9. CNV/SV predefined gene list v1.0 for each disease type can be provided upon request.\n')
+
+    # Section. CHECKED BY.
     table = document.add_table(rows=2, cols=2, style='Table Grid')
-    run = table.rows[0].cells[0].paragraphs[0].add_run('Completed by:')
+    run = table.rows[0].cells[0].paragraphs[0].add_run('Completed by: ')
+    run.bold = True
     run = table.rows[0].cells[1].paragraphs[0].add_run('Date: ')
-    run = table.rows[1].cells[0].paragraphs[0].add_run('Checked by:')
+    run.bold = True
+    run = table.rows[0].cells[1].paragraphs[0].add_run('DD/MM/YYYY')
+    run.font.color.rgb = RGBColor(200, 200, 200)
+    run = table.rows[1].cells[0].paragraphs[0].add_run('Checked by: ')
+    run.bold = True
     run = table.rows[1].cells[1].paragraphs[0].add_run('Date: ')
+    run.bold = True
+    run = table.rows[1].cells[1].paragraphs[0].add_run('DD/MM/YYYY')
+    run.font.color.rgb = RGBColor(200, 200, 200)
 
     return document
+
+
+def add_hyperlink_into_run(paragraph, run, url):
+    runs = paragraph.runs
+    for i in range(len(runs)):
+        if runs[i].text == run.text:
+            break
+
+    # This gets access to the document.xml.rels file and gets a new relation id value
+    part = paragraph.part
+    r_id = part.relate_to(url, opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
+
+    # Create the w:hyperlink tag and add needed values
+    hyperlink = oxml.shared.OxmlElement('w:hyperlink')
+    hyperlink.set(oxml.shared.qn('r:id'), r_id, )
+    hyperlink.append(run._r)
+    paragraph._p.insert(i+1,hyperlink)
