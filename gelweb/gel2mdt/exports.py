@@ -462,10 +462,10 @@ def write_gtab_template(report):
     '''
     proband_variants = list(ProbandVariant.objects.filter(interpretation_report=report))
     
+    # footers template, page number setup
     template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='gtab_template.docx'))
-    
-    document = Document(docx=template_file) # footers template
-    #document = Document()
+    document = Document(docx=template_file) 
+
     sections = document.sections
     for section in sections:
         section.left_margin = Inches(0.5)
@@ -475,137 +475,241 @@ def write_gtab_template(report):
     font = style.font
     font.name = 'Arial'
     font.size = Pt(10)
-    document.add_picture(os.path.join(settings.STATIC_DIR, 'nhs_image.png'), height=Inches(0.63), width=Inches(2.39))
+    
+    #document.add_picture(os.path.join(settings.STATIC_DIR, 'nhs_image.png'), height=Inches(0.63), width=Inches(2.39))
     last_paragraph = document.paragraphs[-1]
     last_paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
 
+    # Page 1.
     table = document.add_table(rows=1, cols=1, style='Table Grid')
     heading_cells = table.rows[0].cells
-    run = heading_cells[0].paragraphs[0].add_run('GTAB SUMMARY SHEET')
+    run = heading_cells[0].paragraphs[0].add_run(
+        'GENOMICS TUMOUR ADVISORY BOARD (GTAB) SUMMARY SHEET')
+    run.font.size = Pt(14)
     run.bold = True
     heading_cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
     heading_cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.3)
     heading_cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.3)
+    shading_grey = oxml.parse_xml(r'<w:shd {} w:fill="E1E1E1"/>'.
+                                            format(oxml.ns.nsdecls('w')))
+    heading_cells[0]._tc.get_or_add_tcPr().append(shading_grey)
+    font.size = Pt(10)
 
-    table = document.add_table(rows=2, cols=1, style='Table Grid')
+    table = document.add_table(rows=1, cols=1, style='Table Grid')
     table.rows[0].cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         'FOR RESEARCH PURPOSES ONLY- THESE RESULTS HAVE NOT BEEN VALIDATED.\n')
-    run.font.color.rgb = RGBColor(255, 0, 0)
+    run.font.color.rgb = RGBColor(210, 42, 42)
+    run.bold = True
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         'UNVALIDATED FINDINGS MUST NOT BE ACTED UPON.\n')
-    run.font.color.rgb = RGBColor(255, 0, 0)
+    run.font.color.rgb = RGBColor(210, 42, 42)
+    run.bold = True
     run = table.rows[0].cells[0].paragraphs[0].add_run(
-        'PLEASE CONTACT THE LABORATORY IF VALIDATION TESTING IS REQUIRED')
-    run.font.color.rgb = RGBColor(255, 0, 0)
-    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.3)
+        'PLEASE CONTACT THE LABORATORY IF VALIDATION TESTING IS REQUIRED\n\n')
+    run.font.color.rgb = RGBColor(210, 42, 42)
+    run.bold = True
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(
+        0.3)
     table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.3)
-    run = table.rows[1].cells[0].paragraphs[0].add_run('Specialist Integrated Haematological Malignancy '
+    
+    run = table.rows[0].cells[0].paragraphs[0].add_run('Specialist Integrated Haematological Malignancy '
                                                        'Diagnostic Service\n')
-    run.font.size = Pt(6)
-    run = table.rows[1].cells[0].paragraphs[0].add_run('Acquired Genomics (SIHMDS-AG), Camelia Botnar Laboratories, '
+    run.font.size = Pt(8)
+    run = table.rows[0].cells[0].paragraphs[0].add_run('Acquired Genomics (SIHMDS-AG), Camelia Botnar Laboratories, '
                                                        'Great Ormond Street Hospital NHS Trust,\n')
-    run.font.size = Pt(6)
-    run = table.rows[1].cells[0].paragraphs[0].add_run('London, WC1N 3JH. Tel: 020 7405 9200 Ex: 5755')
-    run.font.size = Pt(6)
-    table.rows[1].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.2)
-    table.rows[1].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
-    table.rows[1].cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run.font.size = Pt(8)
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        'London, WC1N 3JH. Tel: 020 7405 9200 Ex: 5755')
+    run.font.size = Pt(8)
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(
+        0.2)
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
+    # Section. GENOMICS ENGLAND PARTICIPANT INFORMATION
     table = document.add_table(rows=1, cols=1, style='Table Grid')
     run = table.rows[0].cells[0].paragraphs[0].add_run('GENOMICS ENGLAND PARTICIPANT INFORMATION')
     run.bold = True
     table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.2)
     table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
+    shading_grey = oxml.parse_xml(r'<w:shd {} w:fill="E1E1E1"/>'.format(oxml.ns.nsdecls('w')))
+    table.rows[0].cells[0]._tc.get_or_add_tcPr().append(shading_grey)
 
     table = document.add_table(rows=4, cols=2, style='Table Grid')
-    run = table.rows[0].cells[0].paragraphs[0].add_run(f'Patient Name:\t\t'
-                                                       f'{report.ir_family.participant_family.proband.forename} '
-                                                       f'{report.ir_family.participant_family.proband.surname}')
-    run = table.rows[0].cells[1].paragraphs[0].add_run(f'GEL Participant ID:\t'
-                                                       f'{report.ir_family.participant_family.proband.gel_id}')
-    run = table.rows[1].cells[0].paragraphs[0].add_run(f'Gender:\t\t'
-                                                       f'{report.ir_family.participant_family.proband.sex}')
-    run = table.rows[1].cells[1].paragraphs[0].add_run(f'CIP ID:\t\t\t'
-                                                       f'ILMN-{report.ir_family.ir_family_id}')
-    run = table.rows[2].cells[0].paragraphs[0].add_run(f'Date of Birth:\t\t'
-                                                       f'{report.ir_family.participant_family.proband.date_of_birth.date()}')
-    run = table.rows[2].cells[1].paragraphs[0].add_run(f'NHS number:\t\t'
-                                                       f'{report.ir_family.participant_family.proband.nhs_number}')
-    run = table.rows[3].cells[0].paragraphs[0].add_run(f'Referring Clinician:\t'
-                                                       f'{report.ir_family.participant_family.clinician.name}')
-    run = table.rows[3].cells[1].paragraphs[0].add_run(f'Referring Hospital:\t'
-                                                       f'{report.ir_family.participant_family.proband.gmc}')
-
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'Patient Name:\t\t'
+        f'{report.ir_family.participant_family.proband.forename} '
+        f'{report.ir_family.participant_family.proband.surname}')
+    run = table.rows[0].cells[1].paragraphs[0].add_run(
+        f'NHS number:\t\t'
+        f'{report.ir_family.participant_family.proband.nhs_number}')
+    run = table.rows[1].cells[0].paragraphs[0].add_run(
+        f'Date of Birth:\t\t'
+        f'{report.ir_family.participant_family.proband.date_of_birth.date()}')
+    run = table.rows[1].cells[1].paragraphs[0].add_run(
+        f'CIP ID:\t\t\t'
+        f'ILMN-{report.ir_family.ir_family_id}')
+    run = table.rows[2].cells[0].paragraphs[0].add_run(
+        f'Gender:\t\t'
+        f'{report.ir_family.participant_family.proband.sex}')
+    run = table.rows[2].cells[1].paragraphs[0].add_run(
+        f'GEL Participant ID:\t'
+        f'{report.ir_family.participant_family.proband.gel_id}')
+    run = table.rows[3].cells[0].paragraphs[0].add_run(
+        f'Referring Clinician:\t'
+        f'{report.ir_family.participant_family.clinician.name}')
+    run = table.rows[3].cells[1].paragraphs[0].add_run(
+        f'Referring Hospital:\t'
+        f'{report.ir_family.participant_family.proband.gmc}')
+    
+    # Section. CLINICAL UPDATE
     table = document.add_table(rows=1, cols=1, style='Table Grid')
-    run = table.rows[0].cells[0].paragraphs[0].add_run('GENOMICS ENGLAND REPORT DETAILS')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        'CLINICAL UPDATE')
     run.bold = True
-    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.2)
+    shading_grey = oxml.parse_xml(r'<w:shd {} w:fill="E1E1E1"/>'.format(oxml.ns.nsdecls('w')))
+    table.rows[0].cells[0]._tc.get_or_add_tcPr().append(shading_grey)
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(
+        0.2)
     table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
-
-    table = document.add_table(rows=4, cols=2, style='Table Grid')
-    run = table.rows[0].cells[0].paragraphs[0].add_run(f'Disease Type:\t\t'
-                                                       f'{report.ir_family.participant_family.proband.disease_group}')
-    run = table.rows[0].cells[1].paragraphs[0].add_run(f'Tumour Content:\t\t')
-    run = table.rows[1].cells[0].paragraphs[0].add_run(f'Disease Subtype:\t'
-                                                       f'{report.ir_family.participant_family.proband.disease_subtype}')
-    run = table.rows[1].cells[1].paragraphs[0].add_run(f'Version Number:\t\t')
-    run = table.rows[2].cells[0].paragraphs[0].add_run(f'Tumour Type:\t\t')
-    run = table.rows[2].cells[1].paragraphs[0].add_run(f'Total Somatic SNVs:\t\t')
-    run = table.rows[3].cells[0].paragraphs[0].add_run(f'Tumour sample cross-contamination: Pass ')
-    run = table.rows[3].cells[1].paragraphs[0].add_run(f'Library Prep:\t\t')
-    table = document.add_table(rows=3, cols=1, style='Table Grid')
-    run = table.rows[0].cells[0].paragraphs[0].add_run('ADDITIONAL RECRUITMENT INFORMATION')
-    run.bold=True
-    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.2)
-    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
-    run = table.rows[1].cells[0].paragraphs[0].add_run('Multiple samples (Yes / No):   ')
-    run = table.rows[2].cells[0].paragraphs[0].add_run('GENOMICS TUMOUR ADVISORY BOARD (GTAB) SUMMARY  ')
-    table.rows[2].cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run.bold = True
-    table.rows[2].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.2)
-    table.rows[2].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
-
     table = document.add_table(rows=1, cols=1, style='Table Grid')
-    run = table.rows[0].cells[0].paragraphs[0].add_run('CLINICAL UPDATE\t\t\t\t\t\t\tGTAB date: dd/mm/yyyy\n')
-    run = table.rows[0].cells[0].paragraphs[0].add_run('Include any SOC testing already performed, dates of '
-                                                       'treatment, clinical trials etc.\n\n\n\n\n\n\n\n\n\n')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'Include any SOC testing already performed, dates of '
+        f'treatment, clinical trials etc.\n')
     run.italic = True
-
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'GTAB date:\n')
+    #table = document.add_table(rows=1, cols=2, style='Table Grid')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'Information provided by:\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
     table = document.add_table(rows=1, cols=2, style='Table Grid')
-    run = table.rows[0].cells[0].paragraphs[0].add_run('Oncologist:')
-    run = table.rows[0].cells[1].paragraphs[0].add_run('Clinician in lieu of referrer: ')
+    for cell in table.rows[0].cells:
+        cell.paragraphs[0].paragraph_format.space_before = Cm(0.2)
+        cell.paragraphs[0].paragraph_format.space_after = Cm(0.2)
+    table.rows[0].cells[0].paragraphs[0].add_run(
+        f'Oncologist:\t\t')
+    table.rows[0].cells[1].paragraphs[0].add_run(
+        f'Clinician in lieu of referrer:\t\t')
+
+    # Section. GENOMICS ENGLAND REPORT DETAILS
+    table = document.add_table(rows=1, cols=1, style='Table Grid')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        'GENOMICS ENGLAND REPORT DETAILS')
+    run.bold = True
+    shading_grey = oxml.parse_xml(
+        r'<w:shd {} w:fill="E1E1E1"/>'.format(oxml.ns.nsdecls('w')))
+    table.rows[0].cells[0]._tc.get_or_add_tcPr().append(shading_grey)
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.2)
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
+
+    table = document.add_table(rows=7, cols=2, style='Table Grid')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'Disease Type:\t\t')
+    run = table.rows[0].cells[1].paragraphs[0].add_run(
+        f'GEL Version Number:\t\t')
+    run = table.rows[1].cells[0].paragraphs[0].add_run(
+        f'Disease Subtype:\t\t')
+    run = table.rows[1].cells[1].paragraphs[0].add_run(
+        f'Multiple Samples:\t\t')
+    run = table.rows[2].cells[0].paragraphs[0].add_run(
+        f'Tumour Type:\t\t')
+    run = table.rows[2].cells[1].paragraphs[0].add_run(
+        f'% COSMIC Content < 30x:\t\t')
+    run = table.rows[3].cells[0].paragraphs[0].add_run(
+        f'Sample and Library Type:\t\t')
+    run = table.rows[3].cells[1].paragraphs[0].add_run(
+        f'Total Somatic SNVs:\t\t')
+    run = table.rows[4].cells[0].paragraphs[0].add_run(
+        f'Tumour Content:\t\t')      
+    run = table.rows[4].cells[1].paragraphs[0].add_run(
+        f'Total Somatic SVs:\t\t')
+    run = table.rows[5].cells[0].paragraphs[0].add_run(
+        f'Tumour contamination:\t\t ')
+    run = table.rows[5].cells[1].paragraphs[0].add_run(
+        f'Mutation Burden:\t\t ')
+    run = table.rows[6].cells[0].paragraphs[0].add_run(
+        f'Date Analysis Issued:\t\t ')
+    run = table.rows[6].cells[1].paragraphs[0].add_run(
+        f'Predominant Mutational Signature:\t\t')    
+    
+    table = document.add_table(rows=1, cols=1, style='Table Grid')
+    run = table.rows[0].cells[0].paragraphs[0].add_run('1 ')
+    run.font.superscript = True
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        'Mutation burden: >10 are classified as ‘hypermutators’ and >100, ‘ultra-hypermutators’.\n')
+    run = table.rows[0].cells[0].paragraphs[0].add_run('2 ')
+    run.font.superscript = True
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        'Mutation Signature: is/is not notably found in disease type.\n'
+    )
+    
+    # page break
+    p = document.add_paragraph()
+    run = p.add_run()
+    run.add_break(WD_BREAK.PAGE)
+    
+    # Page 2.
+    # Section. GTAB SUMMARY
+    table = document.add_table(rows=1, cols=1, style='Table Grid')
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        'GTAB SUMMARY')
+    run.bold = True
+    run.font.size = Pt(10)
+    shading_grey = oxml.parse_xml(
+        r'<w:shd {} w:fill="E1E1E1"/>'.format(oxml.ns.nsdecls('w')))
+    table.rows[0].cells[0]._tc.get_or_add_tcPr().append(shading_grey)
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.2)
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
 
     table = document.add_table(rows=1, cols=1, style='Table Grid')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
-        "FOR RESEARCH PURPOSES ONLY- THESE RESULTS HAVE NOT BEEN VALIDATED\n")
-    run.font.color.rgb = RGBColor(255, 0, 0)
+        "\t\tFOR RESEARCH PURPOSES ONLY- THESE RESULTS HAVE NOT BEEN VALIDATED\n\n")
+    run.font.color.rgb = RGBColor(210, 42, 42)
+    run.bold = True
+    run.font.size = Pt(10)
 
-    run = table.rows[0].cells[0].paragraphs[0].add_run("SOMATIC VARIANTS\n\n")
-    run.underline=True
-    run = table.rows[0].cells[0].paragraphs[0].add_run("Only variants with specific consequences "
-                                                       "(transcript ablation, splice acceptor variant, splice donor "
-                                                       "variant, stop gained, frameshift variant, stop lost, start lost,"
-                                                       " transcript amplification, inframe insertion, inframe deletion, "
-                                                       "inframe variant, missense variant, splice region variant) in "
-                                                       "canonical transcripts are reported.Complex indels and "
-                                                       "frameshift variants are only annotated at the CDS level owing "
-                                                       "to problems accurately annotating the protein change with the "
-                                                       "current pipeline.Small variants are classified as SNVs and "
-                                                       "indels < 50bp.Classification for gene mode of action (oncogene, "
-                                                       "tumour suppressor or both) was extracted from the manually "
-                                                       "curated Cancer Gene Census list (Wellcome Trust Sanger "
-                                                       "Institute).Reported variants are classified into Domains 1-3, "
-                                                       "of which Domains 1-2 are reviewed by a clinical scientist and "
-                                                       "discussed at GTAB.\n\n")
-    run.font.size = Pt(5)
-    run = table.rows[0].cells[0].paragraphs[0].add_run("Domain 1 (variants reported as having therapeutic, "
-                                                       "prognostic or trial associations by GenomOncology "
-                                                       "Knowledge Management System):\n")
+    run = table.rows[0].cells[0].paragraphs[0].add_run("SOMATIC VARIANTS\n")
     run.underline = True
-    run.font.size = Pt(9)
-    run = table.rows[0].cells[0].paragraphs[0].add_run("Note: Please see individual "
-                                                       "variant for assessment of pathogenicity\n\n") #\t1)\n")
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.2)
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
+
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f"Only variants with specific consequences (transcript ablation, splice acceptor variant, "
+        f"splice donor variant, stop gained, frameshift variant, stop lost, start lost, transcript "
+        f"amplification, inframe insertion, inframe deletion, inframe variant, missense variant, "
+        f"splice region variant) in canonical transcripts are reported. Complex indels and frameshift "
+        f"variants are only annotated at the coding sequence (CDS) level owing to problems accurately "
+        f"annotating the protein change with the current pipeline. Small variants are classified as "
+        f"single nucleotide variants (SNVs) and indels <50 base pairs (bp). Reported variants classified "
+        f"into Domains 1-2 are reviewed by a clinical scientist and discussed at GTAB meeting.\n\n")
+    run.font.size = Pt(8)
+    
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f"VAF, variant allele frequency. (LOH) a small variant that overlaps with copy-neutral loss of "
+        f"heterozygosity region. Variant flag: (H) an indel intersecting with reference homopolymers of "
+        f"at least 8 nucleotides in length (N) an indel in region with high levels of sequencing noise "
+        f"where at least 10 % of the base calls in a window extending 50 bp either side of the indel's "
+        f"call have been filtered out due to the poor quality (G) a variant with a germline allele "
+        f"frequency > 1 % in an internal Genomics England data set(indicates potential unsubtracted "
+        f"germline variant) (R) a recurrently identified somatic variant with somatic allele frequency "
+        f"> 5 % in an internal Genomics England data set(indicates potential technical artefact) (SR) "
+        f"a variant overlapping simple repeats.\n\n\n\n")
+    run.font.size = Pt(8)
+
+    run = table.rows[0].cells[0].paragraphs[0].add_run("Domain 1 ")
+    run.underline = True
+    run.font.bold = True
+    run.font.size = Pt(10)
+
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f"(variants in a panel of potentially actionable genes listed in the cancer "
+        f"genome analysis documents, and reported as having therapeutic, prognostic or trial "
+        f"associations by GenomOncology Knowledge Management System): \n\n\n\n")
+    run.underline = True
+    run.font.size = Pt(10)
+
     count = 1
     for proband_variant in proband_variants:
         if proband_variant.max_tier == 1 and proband_variant.somatic is True:
