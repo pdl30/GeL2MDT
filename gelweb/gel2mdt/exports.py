@@ -23,12 +23,12 @@ from .models import *
 import csv
 import xlsxwriter
 import io
-from docx import Document
+from docx import Document, oxml
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from django.conf import settings
 import os
 from docx.shared import Pt, Inches, RGBColor, Cm
-from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 
 def write_mdt_export(mdt_instance, mdt_reports):
@@ -461,8 +461,11 @@ def write_gtab_template(report):
     :return: docx document to be exported
     '''
     proband_variants = list(ProbandVariant.objects.filter(interpretation_report=report))
-
-    document = Document()
+    
+    template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='gtab_template.docx'))
+    
+    document = Document(docx=template_file) # footers template
+    #document = Document()
     sections = document.sections
     for section in sections:
         section.left_margin = Inches(0.5)
