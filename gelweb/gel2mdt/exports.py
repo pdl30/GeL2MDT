@@ -25,7 +25,7 @@ import xlsxwriter
 import io
 from docx import Document, oxml, opc
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.style import WD_STYLE
 from django.conf import settings
 import os
 from docx.shared import Pt, Inches, RGBColor, Cm
@@ -484,7 +484,7 @@ def write_gtab_template(report):
     table = document.add_table(rows=1, cols=1, style='Table Grid')
     heading_cells = table.rows[0].cells
     run = heading_cells[0].paragraphs[0].add_run(
-        'GENOMICS TUMOUR ADVISORY BOARD (GTAB) SUMMARY SHEET')
+        'GENOMICS TUMOUR ADVISORY BOARD (GTAB) SUMMARY')
     run.font.size = Pt(14)
     run.bold = True
     heading_cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -575,14 +575,16 @@ def write_gtab_template(report):
     table.rows[0].cells[0].paragraphs[0].paragraph_format.space_after = Cm(0.2)
     table = document.add_table(rows=1, cols=1, style='Table Grid')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'GTAB date: ')
+    run = table.rows[0].cells[0].paragraphs[0].add_run('DD/MM/YYYY\n')
+    run.font.color.rgb = RGBColor(200, 200, 200)
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+    f'Information provided by: ')   
+    run = table.rows[0].cells[0].paragraphs[0].add_run('XXXX (Title)\n')
+    run.font.color.rgb = RGBColor(200, 200, 200)    
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
         f'Include any SOC testing already performed, dates of '
-        f'treatment, clinical trials etc.\n')
-    run.italic = True
-    run = table.rows[0].cells[0].paragraphs[0].add_run(
-        f'GTAB date:\n')
-    #table = document.add_table(rows=1, cols=2, style='Table Grid')
-    run = table.rows[0].cells[0].paragraphs[0].add_run(
-        f'Information provided by:\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')
+        f'treatment, clinical trials etc.\n\n\n\n\n\n\n\n\n\n')
     table = document.add_table(rows=1, cols=2, style='Table Grid')
     for cell in table.rows[0].cells:
         cell.paragraphs[0].paragraph_format.space_before = Cm(0.2)
@@ -605,7 +607,7 @@ def write_gtab_template(report):
 
     table = document.add_table(rows=7, cols=2, style='Table Grid')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
-        f'Disease Type:\t\t'
+        f'Disease Type:\t\t\t'
         f'{report.ir_family.participant_family.proband.disease_group}')
     run = table.rows[0].cells[1].paragraphs[0].add_run(
         f'GEL Version Number:\t\t')
@@ -628,18 +630,21 @@ def write_gtab_template(report):
         f'Total Somatic SVs:\t\t')
     run = table.rows[5].cells[0].paragraphs[0].add_run(
         f'Tumour contamination:\t\t ')
+    run = table.rows[5].cells[1].paragraphs[0].add_run('1 ')
+    run.font.superscript = True
     run = table.rows[5].cells[1].paragraphs[0].add_run(
         f'Mutation Burden:\t\t ')
     run = table.rows[6].cells[0].paragraphs[0].add_run(
         f'Date Analysis Issued:\t\t ')
+    run = table.rows[6].cells[1].paragraphs[0].add_run('2 ')
+    run.font.superscript = True
     run = table.rows[6].cells[1].paragraphs[0].add_run(
         f'Predominant Mutational Signature:\t\t')    
-    
     table = document.add_table(rows=1, cols=1, style='Table Grid')
     run = table.rows[0].cells[0].paragraphs[0].add_run('1 ')
     run.font.superscript = True
     run = table.rows[0].cells[0].paragraphs[0].add_run(
-        'Mutation burden: >10 are classified as ‘hypermutators’ and >100, ‘ultra-hypermutators’.\n')
+        'Mutation Burden: >10 are classified as ‘hypermutators’ and >100, ‘ultra-hypermutators’.\n')
     run = table.rows[0].cells[0].paragraphs[0].add_run('2 ')
     run.font.superscript = True
     run = table.rows[0].cells[0].paragraphs[0].add_run(
@@ -834,7 +839,7 @@ def write_gtab_template(report):
             table.rows[0].cells[0].paragraphs[0].add_run(f"{count}) {transcript.gene} {hgvs_c} {hgvs_p} VAF: XX\n"
                                                          f"Transcript: {transcript.name}\n\n")
             count += 1
-    run.italic=True
+    
     
     # Section. COPY NUMBER VARIANTS AND STRUCTURAL VARIANTS
     table = document.add_table(rows=1, cols=1, style='Table Grid')
@@ -890,20 +895,23 @@ def write_gtab_template(report):
     run_hyper = table.rows[0].cells[0].paragraphs[0].add_run(
         f'https://www.genomicsengland.co.uk/about-genomics-england/the-100000-genomes-project/information-for-gmc-staff/cancer-programme/cancer-genome-analysis\n')
     run_hyper.font.color.rgb = RGBColor(0, 0, 153)
-    run_hyper.font.underline = True
-    add_hyperlink_into_run(table.rows[0].cells[0].paragraphs[0], run_hyper, 'https://www.genomicsengland.co.uk/about-genomics-england/the-100000-genomes-project/information-for-gmc-staff/cancer-programme/cancer-genome-analysis')
+    run_hyper.font.underline = True # has a hyperlink look, but not functional yet
+    
+    # TODO: write a method to add hyperlinks as part of the run?
+    #run_hyper = table.rows[0].cells[0].paragraphs[0].add_run(
+    #    f'https://www.genomicsengland.co.uk/about-genomics-england/the-100000-genomes-project/information-for-gmc-staff/cancer-programme/cancer-genome-analysis\n')
+    #run_hyper.font.color.rgb = RGBColor(0, 0, 153)
+    #run_hyper.font.underline = True
+    #add_hyperlink_into_run(table.rows[0].cells[0].paragraphs[0], run_hyper, 'https://www.genomicsengland.co.uk/about-genomics-england/the-100000-genomes-project/information-for-gmc-staff/cancer-programme/cancer-genome-analysis')
    
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         f'3. Further details on mutational signatures, their prevalence in different '
         f'tumour types and proposed aetiology can be found at the Sanger COSMIC '
-        f'signatures website - https://cancer.sanger.ac.uk/cosmic/signatures\n')
-    #TODO: other hyperlinks required.
-    #run_hyper = table.rows[0].cells[0].paragraphs[0].add_run(
-    #    f'https://cancer.sanger.ac.uk/cosmic/signatures\n')
-    #run_hyper.font.color.rgb = RGBColor(0, 0, 153)
-    #run_hyper.font.underline = True
-    #add_hyperlink_into_run(table.rows[0].cells[0].paragraphs[0], run, 'https://cancer.sanger.ac.uk/cosmic/signatures')
-    
+        f'signatures website - ')
+    run_hyper = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'https://cancer.sanger.ac.uk/cosmic/signatures\n')
+    run_hyper.font.color.rgb = RGBColor(0, 0, 153)
+    run_hyper.font.underline = True # has a hyperlink look, but not functional yet   
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         f'4. Alamut Visual v2.11 is used for information on variant population '
         f'frequency, in silico prediction and splicing impact prediction.\n')
@@ -912,7 +920,11 @@ def write_gtab_template(report):
         f'Associated Supplementary HTML.\n')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         f'6. Somatic variant-level actionability is sourced from the GEL Associated '
-        f'Supplementary HTML and/or if relevant to disease type https://www.mycancergenome.org/\n')
+        f'Supplementary HTML and/or if relevant to disease type \n')
+    run_hyper = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'https://www.mycancergenome.org/\n')
+    run_hyper.font.color.rgb = RGBColor(0, 0, 153)
+    run_hyper.font.underline = True # has a hyperlink look, but not functional yet
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         f'7. Databases referenced include ClinVar, GeneCards, gnomAD, HGMD and OMIM.\n')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
@@ -924,12 +936,16 @@ def write_gtab_template(report):
     table = document.add_table(rows=2, cols=2, style='Table Grid')
     run = table.rows[0].cells[0].paragraphs[0].add_run('Completed by: ')
     run.bold = True
+    run = table.rows[0].cells[0].paragraphs[0].add_run('XXXX (Title)')
+    run.font.color.rgb = RGBColor(200, 200, 200)
     run = table.rows[0].cells[1].paragraphs[0].add_run('Date: ')
     run.bold = True
     run = table.rows[0].cells[1].paragraphs[0].add_run('DD/MM/YYYY')
     run.font.color.rgb = RGBColor(200, 200, 200)
     run = table.rows[1].cells[0].paragraphs[0].add_run('Checked by: ')
     run.bold = True
+    run = table.rows[1].cells[0].paragraphs[0].add_run('XXXX (Title)')
+    run.font.color.rgb = RGBColor(200, 200, 200)
     run = table.rows[1].cells[1].paragraphs[0].add_run('Date: ')
     run.bold = True
     run = table.rows[1].cells[1].paragraphs[0].add_run('DD/MM/YYYY')
@@ -938,6 +954,7 @@ def write_gtab_template(report):
     return document
 
 
+# TODO: Not in use currently. Planned for GTAB export append hyperlinks 
 def add_hyperlink_into_run(paragraph, run, url):
     runs = paragraph.runs
     for i in range(len(runs)):
