@@ -307,10 +307,19 @@ def write_mdt_outcome_template(report):
     :param pk: GEL Interpretationreport instance
     :return: Writes a docx template file for summarising proband MDT outcomes
     """
-    document = Document()
-    document.add_picture(os.path.join(settings.STATIC_DIR, 'nhs_image.png'))
+    #document = Document()
+    # footers template, page number setup
+    mdm_template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='mdm_outcome_template.docx'))
+    document = Document(docx=mdm_template_file)
+
+    document.add_picture(os.path.join(settings.STATIC_DIR, 'nhs_image.png'), height=Inches(1.0)) # image scaled on width axis
     header_image = document.paragraphs[-1]
     header_image.alignment = WD_ALIGN_PARAGRAPH.RIGHT 
+
+    style = document.styles['Normal']
+    font = style.font
+    font.name = 'Cambria'
+    font.size = Pt(11)
  
     document.add_heading('Genomics MDM record', 0)
 
