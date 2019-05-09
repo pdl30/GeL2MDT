@@ -131,7 +131,7 @@ SOFTWARE.
                             <div class="panel-heading">Cases</div>
                             <div class="panel-body">
 
-                                <div class="table-responsive"  >
+                                <div class="table-responsive">
                                     <table width="100%" class="table table-striped table-bordered table-hover" id="mdt-proband-table">
                                         <thead>
                                             <tr>
@@ -178,16 +178,36 @@ SOFTWARE.
 
      <script>
     $(document).ready(function() {
-        $('#mdt-proband-table').DataTable({
+        var table = $('#mdt-proband-table').DataTable( {
             dom: 'lBfrtip',
-            buttons: [ {
-                extend: 'excelHtml5',
-                title: "MDT_{{mdt_id}}"
-            },
-            {
-                extend: 'csvHtml5',
-                title: "MDT_{{mdt_id}}"
-            }],
+            "lengthMenu": [[5, 10, 20, -1], [5, 10, 20, "All"]],
+            "order": [[ 0, "desc" ]],
+            "scrollY": "400px",
+            "scrollX": true,
+            "scrollCollapse": true,
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    title: "MDT_{{mdt_id}}"
+                },
+                {
+                    extend: 'csvHtml5',
+                    title: "MDT_{{mdt_id}}"
+                },
+                { 
+                    text: 'Show compact table',
+                    action: function ( e, dt, node, config ) {
+                        if(config.text == 'Show compact table') {
+                            table.columns( [5,12,13,14,15] ).visible( false );
+                            this.text( 'Show all columns');
+                        }
+                        else {
+                            table.columns().visible( true );
+                            this.text( 'Show compact table');
+                        }
+                    },
+                }
+            ]
         });
     });
     </script>

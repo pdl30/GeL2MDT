@@ -359,7 +359,8 @@ class GELInterpretationReport(models.Model):
         ('CLINGEN', 'CLINGEN'),
         ('DECEASED', 'DECEASED'),
         ('DNAREQ', 'DNAREQ'),
-        ('RETURN', 'RETURN')),)
+        ('RETURN', 'RETURN'),
+        ('AUTHREQ', 'AUTHREQ')),)
     first_check = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
