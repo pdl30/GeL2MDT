@@ -264,9 +264,16 @@ def write_mdt_export(mdt_instance, mdt_reports):
 
 def monthly_not_completed():
     all_mdts = MDT.objects.all()
-    workbook = xlsxwriter.Workbook("monthly_results.xlsx")
-    worksheet = workbook.add_worksheet('Summary')
-    months = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'June', 7: 'July', 8: 'Aug', 9: 'Sep', 10: 'Oct',
+    workbook = xlsxwriter.Workbook('monthly_not_completed_export.xlsx')
+    worksheet = workbook.add_worksheet()
+    #worksheet = workbook.add_worksheet('Summary')
+
+    #row = 0
+    #worksheet.write(row, 0, 'Total')
+
+
+
+    '''months = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'June', 7: 'July', 8: 'Aug', 9: 'Sep', 10: 'Oct',
               11: 'Nov', 12: 'Dec'}
     years = ['2017', '2018', '2019', '2020']
     month_count = 0
@@ -297,7 +304,7 @@ def monthly_not_completed():
                     row += 1
                 except Proband.DoesNotExist:
                     pass
-            month_count += 2
+            month_count += 2'''
     workbook.close()
     return workbook
 
