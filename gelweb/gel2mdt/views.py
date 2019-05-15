@@ -1823,14 +1823,19 @@ def run_sv_extraction(request, report_id):
 
 @login_required
 def export_monthly_report(request):
-    #if request.method == "POST":
-    try:
-        xlsx = monthly_not_completed()
-        response = HttpResponse(
-            xlsx,
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-        response['Content-Disposition'] = 'attachment; filename=monthly_not_completed_export.xlsx'
-        return response
-    except ValueError as error:
-        messages.add_message(request, 40, 'Something went wrong, please contact gel2mdt.technicalsupport@nhs.net')
-        return HttpResponseRedirect(f'/user_admin')
+    '''
+    Export the monthly report as xlsx document
+    :return: User admin view
+    '''
+    if request.method == "POST":
+        try:
+            xlsx = monthly_not_completed()
+            response = HttpResponse(
+                xlsx,
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=monthly_not_completed_export.xlsx'
+            return response
+        except ValueError as error:
+            messages.add_message(request, 40, 'Something has gone wrong, please contact gel2mdt.technicalsupport@nhs.net '
+                                              'about this')
+            return HttpResponseRedirect(f'/user_admin')

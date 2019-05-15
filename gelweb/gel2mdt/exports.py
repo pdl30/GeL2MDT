@@ -263,17 +263,19 @@ def write_mdt_export(mdt_instance, mdt_reports):
 
 
 def monthly_not_completed():
+    '''
+    Writes MDT cases completed and not completed per month
+    :return: XLXS file writer as stream
+    '''
     all_mdts = MDT.objects.all()
-    workbook = xlsxwriter.Workbook('monthly_not_completed_export.xlsx')
-    worksheet = workbook.add_worksheet()
-    #worksheet = workbook.add_worksheet('Summary')
-
-    #row = 0
-    #worksheet.write(row, 0, 'Total')
-
-
-
-    '''months = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'June', 7: 'July', 8: 'Aug', 9: 'Sep', 10: 'Oct',
+    output = io.BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet('Pivot')
+    worksheet = workbook.add_worksheet('Summary')
+    row = 0
+    worksheet.write(row, 0, 'Total')
+    
+    months = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'June', 7: 'July', 8: 'Aug', 9: 'Sep', 10: 'Oct',
               11: 'Nov', 12: 'Dec'}
     years = ['2017', '2018', '2019', '2020']
     month_count = 0
@@ -304,9 +306,11 @@ def monthly_not_completed():
                     row += 1
                 except Proband.DoesNotExist:
                     pass
-            month_count += 2'''
+            month_count += 2
     workbook.close()
-    return workbook
+    # rewind the buffer
+    output.seek(0)
+    return output
 
 
 def write_mdt_outcome_template(report):

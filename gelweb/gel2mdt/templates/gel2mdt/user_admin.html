@@ -245,9 +245,9 @@ SOFTWARE.
                     <div class="panel panel-default">
                         <div class="panel-heading">Exports</div>
                             <div class="panel-body">
-                                    <div class="col-md-2">
-                                            <a href="/export_monthly_report/"><i class="fas fa-external-link-alt"></i>Monthly report pivot</a>
-                                    </div>
+                                <form action="/export_monthly_report/" role="form" method="post">
+                                {% csrf_token %} {% bootstrap_button "Monthly not completed" button_type="submit" button_class="btn-info" %}
+                            </form>
                             </div>
                         </div>
                     </div>
