@@ -222,3 +222,6 @@ NOTEBOOK_ARGUMENTS = [
     '--allow-root'
 ]
 SESSION_COOKIE_AGE = 60 * 60 * 12 # sec * min * hrs
+
+# potentially high variant number for cancer sample type
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 1500

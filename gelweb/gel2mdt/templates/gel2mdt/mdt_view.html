@@ -145,8 +145,10 @@ SOFTWARE.
                                                 <th>Discussion</th>
                                                 <th>Action</th>
                                                 <th>Edit Important Variants</th>
+                                                {% if sample_type == 'raredisease' %}
                                                 <th>Edit CNVs</th>
                                                 <th>Edit STRs</th>
+                                                {% endif %}
                                                 <th>Edit T3 Variants</th>
                                                 <th>Disease Type</th>
                                                 {% if sample_type == 'cancer' %}
@@ -177,6 +179,8 @@ SOFTWARE.
 </div>
 
      <script>
+    var sample_type = "{{sample_type}}";
+    
     $(document).ready(function() {
         var table = $('#mdt-proband-table').DataTable( {
             dom: 'lBfrtip',
@@ -198,7 +202,12 @@ SOFTWARE.
                     text: 'Show compact table',
                     action: function ( e, dt, node, config ) {
                         if(config.text == 'Show compact table') {
-                            table.columns( [5,12,13,14,15] ).visible( false );
+                            if(sample_type == 'cancer') {
+                                table.columns( [5,10,11,12,13] ).visible( false );
+                            }
+                            else if(sample_type == 'raredisease') {
+                                table.columns( [5,12,13,14,15] ).visible( false );
+                            }
                             this.text( 'Show all columns');
                         }
                         else {
