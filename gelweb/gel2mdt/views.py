@@ -40,7 +40,7 @@ from .config import load_config
 from .forms import *
 from .filters import *
 from .tasks import *
-from .exports import write_mdt_outcome_template, write_mdt_export, write_gtab_template, monthly_not_completed
+from .exports import write_mdt_outcome_template, write_mdt_export, write_gtab_template, monthly_not_completed, breakdown_by_site
 from .api.api_views import *
 from .database_utils.multiple_case_adder import MultipleCaseAdder
 from .vep_utils.run_vep_batch import CaseVariant
@@ -1822,7 +1822,7 @@ def run_sv_extraction(request, report_id):
 
 
 @login_required
-def export_monthly_report(request):
+def export_audit_monthly_report(request):
     '''
     Export the monthly report as xlsx document
     :return: User admin view
@@ -1838,4 +1838,22 @@ def export_monthly_report(request):
         except ValueError as error:
             messages.add_message(request, 40, 'Something has gone wrong, please contact gel2mdt.technicalsupport@nhs.net '
                                               'about this')
+            return HttpResponseRedirect(f'/user_admin')
+
+@login_required
+def export_audit_breakdown_by_site(request):
+    '''
+    Export cases breakdown by site as xlsx document
+    : return: User admin view
+    '''
+    if request.method == "POST":
+        try:
+            xlsx = breakdown_by_site()
+            response = HttpResponse(
+                xlsx,
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=cases_breakdown_by_site.xlsx'
+            return response
+        except ValueError as error:
+            messages.add_message(request, 40, 'Something has gone wrong')
             return HttpResponseRedirect(f'/user_admin')

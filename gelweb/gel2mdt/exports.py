@@ -29,6 +29,9 @@ from docx.enum.style import WD_STYLE
 from django.conf import settings
 import os
 from docx.shared import Pt, Inches, RGBColor, Cm
+from datetime import datetime
+import pandas as pd
+import numpy as np
 
 
 def write_mdt_export(mdt_instance, mdt_reports):
@@ -275,38 +278,43 @@ def monthly_not_completed():
     row = 0
     worksheet.write(row, 0, 'Total')
     
+    current_year = datetime.now().year
+    current_month = datetime.now().month
     months = {1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'June', 7: 'July', 8: 'Aug', 9: 'Sep', 10: 'Oct',
               11: 'Nov', 12: 'Dec'}
     years = ['2017', '2018', '2019', '2020']
+    
     month_count = 0
     for year in years:
-        for month in months:
-            completed_cases = []
-            notcompleted_cases = []
-            worksheet.write(0, month_count, f"{year}_{months[month]}")
-            month_mdts = all_mdts.filter(date_of_mdt__year=year, date_of_mdt__month=month)
-            for mdt in month_mdts:
-                for report in mdt.mdtreport_set.all():
-                    if report.interpretation_report.case_status != 'C':
-                        notcompleted_cases.append(report)
-                    else:
-                        completed_cases.append(report)
-            worksheet.write(1, month_count, f"Completed Count: ")
-            worksheet.write(2, month_count, len(completed_cases))
-            worksheet.write(1, month_count + 1, f"Not Completed Count: ")
-            worksheet.write(2, month_count + 1, len(notcompleted_cases))
-            if notcompleted_cases:
-                worksheet.write(4, month_count + 1, 'Participant IDs')
-            row = 5
-            for case in notcompleted_cases:
-                try:
-                    worksheet.write(row, month_count + 1,
-                                    f"{case.interpretation_report.ir_family.participant_family.proband.gel_id}; "
-                                    f"{case.interpretation_report.ir_family.participant_family.clinician.name}")
-                    row += 1
-                except Proband.DoesNotExist:
-                    pass
-            month_count += 2
+        if int(year) <= int(current_year):
+            for month in months:
+                if int(month) <= int(current_month):
+                    completed_cases = []
+                    notcompleted_cases = []
+                    worksheet.write(0, month_count, f"{year}_{months[month]}")
+                    month_mdts = all_mdts.filter(date_of_mdt__year=year, date_of_mdt__month=month)
+                    for mdt in month_mdts:
+                        for report in mdt.mdtreport_set.all():
+                            if report.interpretation_report.case_status != 'C':
+                                notcompleted_cases.append(report)
+                            else:
+                                completed_cases.append(report)
+                    worksheet.write(1, month_count, f"Completed Count: ")
+                    worksheet.write(2, month_count, len(completed_cases))
+                    worksheet.write(1, month_count + 1, f"Not Completed Count: ")
+                    worksheet.write(2, month_count + 1, len(notcompleted_cases))
+                    if notcompleted_cases:
+                        worksheet.write(4, month_count + 1, 'Participant IDs')
+                    row = 5
+                    for case in notcompleted_cases:
+                        try:
+                            worksheet.write(row, month_count + 1,
+                                            f"{case.interpretation_report.ir_family.participant_family.proband.gel_id}; "
+                                            f"{case.interpretation_report.ir_family.participant_family.clinician.name}")
+                            row += 1
+                        except Proband.DoesNotExist:
+                            pass
+                    month_count += 2
     workbook.close()
     # rewind the buffer
     output.seek(0)
@@ -990,3 +998,76 @@ def add_hyperlink_into_run(paragraph, run, url):
     hyperlink.set(oxml.shared.qn('r:id'), r_id, )
     hyperlink.append(run._r)
     paragraph._p.insert(i+1,hyperlink)
+
+
+def breakdown_by_site():
+    '''
+    Export cases breakdown by gmc.
+    Using a temp file from local only repo 'part_ids_and_gmc_rd.csv'
+    : return: 
+    '''
+    output = io.BytesIO()
+    all_gelirs = GELInterpretationReport.objects.latest_cases_by_sample_type('raredisease')
+    excel_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='part_ids_and_gmc_rd.csv'))
+    
+    rd_dict = {} # Key1 should be the GMC, key2 should be the clinician, key3 should be the disease type
+
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet('Pivot')
+    worksheet = workbook.add_worksheet('Summary')
+
+    gmc_lookup = {}
+    with open(excel_file) as f:
+        csv_file = csv.DictReader(f)
+        for line in csv_file:
+            gmc_lookup[line['ParticipantID']] = line['\ufeffSource_Hospital']
+    
+    for gelir in all_gelirs:
+        try:
+            gel_id = gelir.ir_family.participant_family.proband.gel_id
+            gmc_code = gelir.ir_family.participant_family.proband.gmc
+        except Proband.DoesNotExist:
+            continue
+        try:
+            gmc_code = gmc_lookup[gel_id]
+        except KeyError:
+            gmc_code = gelir.ir_family.participant_family.proband.gmc
+        clinician = gelir.ir_family.participant_family.clinician.name
+        disease = gelir.ir_family.participant_family.proband.disease_group
+        
+        if not disease:
+            disease = 'Unknown'
+        try:
+            if clinician:
+                if gmc_code not in rd_dict:
+                    rd_dict[gmc_code] = {}
+                if disease not in rd_dict[gmc_code]:
+                    rd_dict[gmc_code][disease] = {}
+                if clinician not in rd_dict[gmc_code][disease]:
+                    rd_dict[gmc_code][disease][clinician] = 0
+                else:
+                    rd_dict[gmc_code][disease][clinician] += 1
+        except Proband.DoesNotExist:
+            pass
+
+    # correct missing values
+    #print(rd_dict.keys())
+    for key in rd_dict:
+        df = pd.DataFrame.from_records(rd_dict[key])
+        df = df.replace(0, np.nan)
+        df = df.replace('0', np.nan)
+        df = df.dropna(axis=0, how='all')
+
+        filename = key + '_breakdown.csv'
+        csv_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename=filename))
+        df.to_csv(csv_file)
+
+    # write to stream
+    #row = 0
+
+    workbook.close()
+    # rewind the buffer
+    output.seek(0)
+    return output
+
+

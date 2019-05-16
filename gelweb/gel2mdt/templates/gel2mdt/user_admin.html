@@ -243,10 +243,13 @@ SOFTWARE.
             <div class="row">
                 <div class="col-md-12">
                     <div class="panel panel-default">
-                        <div class="panel-heading">Exports</div>
+                        <div class="panel-heading">Excel exports</div>
                             <div class="panel-body">
-                                <form action="/export_monthly_report/" role="form" method="post">
+                                <form action="/export_audit_monthly_report/" role="form" method="post">
                                 {% csrf_token %} {% bootstrap_button "Monthly not completed" button_type="submit" button_class="btn-info" %}
+                            </form>
+                                <form action="/export_audit_breakdown_by_site/" role="form" method="post">
+                                {% csrf_token %} {% bootstrap_button "Breakdown by site" button_type="submit" button_class="btn-info" %}
                             </form>
                             </div>
                         </div>
