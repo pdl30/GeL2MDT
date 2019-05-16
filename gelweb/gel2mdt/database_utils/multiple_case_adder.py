@@ -90,11 +90,9 @@ class MultipleCaseAdder(object):
             self.list_of_cases = self.fetch_test_data()
             self.cases_to_poll = None
             print("Fetched test data.")
-            self.cases_to_add = self.check_cases_to_add()
-            self.cases_to_update = self.check_cases_to_update()  #
-            self.cases_to_skip = set(self.list_of_cases) - \
-                                 set(self.cases_to_add) - \
-                                 set(self.cases_to_update)
+            self.cases_to_add = self.list_of_cases
+            self.cases_to_update = []
+            self.cases_to_skip = []
             self.update_database()
         elif sample:
             interpretation_list_poll = InterpretationList(sample_type=sample_type, sample=sample)
@@ -219,7 +217,27 @@ class MultipleCaseAdder(object):
             listupdate.reports_added.add(*added_cases)
             listupdate.reports_updated.add(*updated_cases)
 
-            # Add in case alert
+            if self.sample_type == 'raredisease':
+                self.deselect_ensembl_transcripts(added_cases)
+                self.deselect_ensembl_transcripts(updated_cases)
+
+    def deselect_ensembl_transcripts(self, cases):
+        """
+        Deselects canonical ensembl transcripts which leaves just the refseq transcripts for RD cases
+        :param cases: List of RD cases which have been updated/added
+        :return:
+        """
+        for case in cases:
+            proband_variants = case.probandvariant_set.all()
+            for pv in proband_variants:
+                ptvs = pv.probandtranscriptvariant_set.filter(selected=True)
+                for ptv in ptvs:
+                    if not ptv.proband_variant.variant.chromosome.startswith('M'):
+                        one_refseq = [probandtv for probandtv in ptvs if probandtv.transcript.name.startswith("N")]
+                        if one_refseq and len(ptvs) >= 2:
+                            if ptv.transcript.name.startswith('ENST'):
+                                ptv.selected = False
+                                ptv.save()
 
     def fetch_test_data(self):
         """
@@ -378,6 +396,13 @@ class MultipleCaseAdder(object):
             (PVFlag, True),
             (TranscriptVariant, True),
             (ProbandTranscriptVariant, True),
+            (SVRegion, True),
+            (SV, True),
+            (ProbandSV, True),
+            (ProbandSVGene, True),
+            (STRVariant, True),
+            (ProbandSTR, True),
+            (ProbandSTRGene, True),
             #(ReportEvent, True)
         )
 
@@ -600,6 +625,13 @@ class MultipleCaseAdder(object):
             PVFlag: ['id', "proband_variant", "flag_name"],
             ProbandTranscriptVariant: ['id',"transcript", "proband_variant"],
             ReportEvent: ['id',"proband_variant", "re_id"],
+            SVRegion: ['id', 'chromosome', 'sv_start', 'sv_end', "genome_assembly"],
+            SV: ['id', 'sv_region1', 'sv_region2', 'variant_type'],
+            ProbandSV: ['id', "sv", "interpretation_report"],
+            ProbandSVGene: ['id', "proband_sv", 'gene'],
+            STRVariant: ['id', 'chromosome', 'str_start', 'str_end', "genome_assembly", "repeated_sequence", "normal_threshold", "pathogenic_threshold"],
+            ProbandSTR: ['id', "str_variant", "interpretation_report"],
+            ProbandSTRGene: ['id', "proband_str", 'gene'],
         }
         return lookup_dict[model_type]
 

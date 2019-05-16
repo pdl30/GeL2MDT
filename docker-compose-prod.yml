@@ -9,8 +9,11 @@ services:
     image: nginx:latest
     ports:
       - "8000:8000"
+      - "443:443"
+      - "80:80"
     volumes:
       - ./Docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./Docker/nginx/ssl/:/etc/nginx/ssl
       - ./gelweb/gelweb/static_files:/static
     depends_on:
       - web
@@ -23,52 +26,23 @@ services:
     command: bash -c ". /root/gel2mdt/Docker/startup_script.sh && cd /root/gel2mdt/gelweb && gunicorn gelweb.wsgi --workers=9 -t 90 -b 0.0.0.0:8000"
     volumes:
       - .:/root/gel2mdt/
-      - /home/genseqservadmin/.vep/:/root/.vep
-      - ~/gel2mdt_resources:/root/gel2mdt_cache
+      - /var/app/vep/:/root/.vep
+      - /var/app/gel2mdt_resources:/root/gel2mdt_cache
     env_file:
       - /etc/gel2mdt/credentials
     depends_on:
       - db
       - redis
-  jupyter:
-    image: gel2mdt_jupyter
-    build: .
-    restart: always
-    build:
-      context: .
-    command: bash -c ". /root/gel2mdt/Docker/startup_script.sh && jupyter notebook --generate-config -y && cd /root/gel2mdt/gelweb && python manage.py shell_plus --notebook"
-    volumes:
-      - .:/root/gel2mdt/
-      - ~/gel2mdt_resources:/root/gel2mdt_cache
-    env_file:
-      - /etc/gel2mdt/credentials
-    ports:
-      - "8899:8888"
-    depends_on:
-      - db
-      - redis
-      - web
   db:
     image: mysql:5.7
     restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=gel2mdt_db
       - MYSQL_USER=paddy
     env_file:
       - /etc/gel2mdt/credentials
     volumes:
-      - ~/gel2mdt_resources/gel2mdt_db:/var/lib/mysql
-#  db:
-#    image: postgres:10
-#    restart: always
-#    environment:
-#      - POSTGRES_DB=gel2mdt_db
-#      - POSTGRES_USER=paddy
-#    env_file:
-#      - /etc/gel2mdt/credentials
-#    volumes:
-#      - ~/gel2mdt_resources/gel2mdt_db:/var/lib/postgresql/data
+      - /var/app/gel2mdt_resources/gel2mdt_db:/var/lib/mysql
   celery:
     build: .
     restart: always
@@ -78,8 +52,8 @@ services:
       - /etc/gel2mdt/credentials
     volumes:
       - .:/root/gel2mdt/
-      - /home/genseqservadmin/.vep/:/root/.vep
-      - ~/gel2mdt_resources:/root/gel2mdt_cache
+      - /var/app/vep/:/root/.vep
+      - /var/app/gel2mdt_resources:/root/gel2mdt_cache
     depends_on:
       - db
       - redis
@@ -92,8 +66,8 @@ services:
       - /etc/gel2mdt/credentials
     volumes:
       - .:/root/gel2mdt/
-      - /home/genseqservadmin/.vep/:/root/.vep
-      - ~/gel2mdt_resources:/root/gel2mdt_cache
+      - /var/app/vep/:/root/.vep
+      - /var/app/gel2mdt_resources:/root/gel2mdt_cache
     depends_on:
       - db
       - redis
@@ -101,6 +75,8 @@ services:
     build: .
     image: gel2mdt_flower
     restart: always
+    env_file:
+      - /etc/gel2mdt/credentials
     volumes:
       - .:/root/gel2mdt/
     command: bash -c "cd /root/gel2mdt/gelweb && celery flower -A gelweb --broker=redis://redis:6379 --port=5550"
@@ -111,14 +87,3 @@ services:
       - redis
       - celery
       - celery-beat
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    restart: always
-    volumes:
-      - /sessions
-    ports:
-      - 8088:80
-    environment:
-      - PMA_ARBITRARY=1
-    depends_on:
-      - db

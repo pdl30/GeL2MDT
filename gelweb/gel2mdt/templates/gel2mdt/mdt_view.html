@@ -24,26 +24,6 @@ SOFTWARE.
 {% load static %}
 
 
-{% if clinician %}
-    {% block tabs %}
-
-            <ul class="nav navbar-nav">
-                        {% if sample_type == 'cancer' %}
-                            <li><a href="{% url 'cancer-main' %}"><i class="fas fa-home"></i></span> Cases</a></li>
-                            </ul>
-                        {% elif sample_type == 'raredisease' %}
-                            <li><a href="{% url 'rare-disease-main' %}"><i class="fas fa-home"></i></span> Cases</a></li>
-                            </ul>
-                        {% endif %}
-
-
-                    <ul class="nav navbar-nav">
-                        <li><a href="{% url 'recent-mdt' sample_type=sample_type %}" ><i class="fas fa-history"></i> Recent MDTs</a></li>
-                        </ul>
-{% endblock %}
-    {% endif %}
-
-
 {% block content %}
 {% load gel2mdt_extras %}
 
@@ -66,7 +46,12 @@ SOFTWARE.
      <form action="/select_attendees_for_mdt/{{ mdt_id }}" role="form">
         {% csrf_token %} {% bootstrap_button "Add Attendees" button_type="submit" button_class="btn-primary" %}
     </form>
+    {% else %}
+    <form action="/export_mdt/{{ mdt_id }}" role="form" method="post">
+        {% csrf_token %} {% bootstrap_button "Export MDT" button_type="submit" button_class="btn-info" %}
+    </form>
     {% endif %}
+
 </div>
 
 <br>
@@ -96,7 +81,7 @@ SOFTWARE.
 
 
                                  <div class="col-md-9">
-                                    {{sent_to_clinican_form.as_p}}
+                                    {{sent_to_clinican_form.as_ul}}
                                 </div>
                         </div>
                     </div>
@@ -146,7 +131,7 @@ SOFTWARE.
                             <div class="panel-heading">Cases</div>
                             <div class="panel-body">
 
-                                <div class="table-responsive"  >
+                                <div class="table-responsive">
                                     <table width="100%" class="table table-striped table-bordered table-hover" id="mdt-proband-table">
                                         <thead>
                                             <tr>
@@ -160,6 +145,10 @@ SOFTWARE.
                                                 <th>Discussion</th>
                                                 <th>Action</th>
                                                 <th>Edit Important Variants</th>
+                                                {% if sample_type == 'raredisease' %}
+                                                <th>Edit CNVs</th>
+                                                <th>Edit STRs</th>
+                                                {% endif %}
                                                 <th>Edit T3 Variants</th>
                                                 <th>Disease Type</th>
                                                 {% if sample_type == 'cancer' %}
@@ -190,17 +179,44 @@ SOFTWARE.
 </div>
 
      <script>
+    var sample_type = "{{sample_type}}";
+    
     $(document).ready(function() {
-        $('#mdt-proband-table').DataTable({
+        var table = $('#mdt-proband-table').DataTable( {
             dom: 'lBfrtip',
-            buttons: [ {
-                extend: 'excelHtml5',
-                title: "MDT_{{mdt_id}}"
-            },
-            {
-                extend: 'csvHtml5',
-                title: "MDT_{{mdt_id}}"
-            }],
+            "lengthMenu": [[5, 10, 20, -1], [5, 10, 20, "All"]],
+            "order": [[ 0, "desc" ]],
+            "scrollY": "400px",
+            "scrollX": true,
+            "scrollCollapse": true,
+            buttons: [
+                {
+                    extend: 'excelHtml5',
+                    title: "MDT_{{mdt_id}}"
+                },
+                {
+                    extend: 'csvHtml5',
+                    title: "MDT_{{mdt_id}}"
+                },
+                { 
+                    text: 'Show compact table',
+                    action: function ( e, dt, node, config ) {
+                        if(config.text == 'Show compact table') {
+                            if(sample_type == 'cancer') {
+                                table.columns( [5,10,11,12,13] ).visible( false );
+                            }
+                            else if(sample_type == 'raredisease') {
+                                table.columns( [5,12,13,14,15] ).visible( false );
+                            }
+                            this.text( 'Show all columns');
+                        }
+                        else {
+                            table.columns().visible( true );
+                            this.text( 'Show compact table');
+                        }
+                    },
+                }
+            ]
         });
     });
     </script>

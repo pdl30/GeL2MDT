@@ -48,6 +48,44 @@ import datetime
 from django.contrib.auth.models import User, Group
 from .sv_extraction.filter_sv import SVFiltration
 import gc
+from django.db.utils import ProgrammingError, OperationalError
+
+
+def create_admin_group():
+    try:
+        group, created = Group.objects.get_or_create(name='ADMIN GROUP')
+        if not hasattr(group, 'grouppermissions'):
+            group_permissions = GroupPermissions(group=group)
+            group_permissions.save()
+        permissions = group.grouppermissions
+        permissions.cancer = True
+        permissions.raredisease = True
+        permissions.can_view_pvs = True
+        permissions.can_view_svs = True
+        permissions.can_view_strs = True
+        permissions.can_select_update_transcript = True
+        permissions.pull_t3_variants = True
+        permissions.can_edit_proband = True
+        permissions.can_edit_completed_proband = True
+        permissions.can_edit_gelir = True
+        permissions.can_edit_mdt = True
+        permissions.can_get_gel_report = True
+        permissions.can_edit_relative = True
+        permissions.can_edit_clinical_questions = True
+        permissions.start_mdt = True
+        permissions.can_edit_case_alert = True
+        permissions.can_edit_validation_list = True
+        permissions.save()
+    except (ProgrammingError, OperationalError):
+        pass # Models probably don't exist yet
+    try:
+        gmc_list = Proband.objects.all().values_list('gmc', flat=True)
+        gmc_list = set(gmc_list)
+        for gmc in gmc_list:
+            if gmc:
+                GMC.objects.get_or_create(name=gmc)
+    except (ProgrammingError, OperationalError):
+        pass # Models probably don't exist yet
 
 
 def get_gel_content(ir, ir_version):
@@ -246,8 +284,8 @@ def report_export_for_rakib():
         except Proband.DoesNotExist:
             pass
     output.close()
-    subject, from_email, to = f'GeL2MDT Case Export', 'bioinformatics@gosh.nhs.uk', \
-                              'Rakib.Miah@gosh.nhs.uk'
+    subject, from_email, to = f'GeL2MDT Case Export', 'gel2mdt.technicalsupport@nhs.net', \
+                              'rakib.miah1@nhs.net'
     text_content = f'Please see attached report'
     try:
         msg = EmailMessage(subject, text_content, from_email, [to])
@@ -282,18 +320,9 @@ def case_alert_email():
                         sample_types[s_type] = True
                 except Proband.DoesNotExist:
                     pass
-
-    text_content = ''
     if sample_types['cancer'] or sample_types['raredisease']:
-        for s_type in sample_types:
-            if matching_cases[s_type]:
-                text_content += f'{s_type.title()} Case Alert:\n'
-                for case in matching_cases[s_type]:
-                    case_alert = CaseAlert.objects.get(id=case)
-                    if matching_cases[s_type][case]:
-                        text_content += f'Case {case_alert.gel_id} with CIP-ID of {matching_cases[s_type][case][0][1]} ' \
-                                        f'has been added to the database. CaseAlert comment: {case_alert.comment}\n'
-        subject, from_email, to = f'GeL2MDT CaseAlert', 'bioinformatics@gosh.nhs.uk', 'GELTeam@gosh.nhs.uk'
+        text_content = "A Case Alert has been triggered, please visit GEL2MDT to check and remove this alert!"
+        subject, from_email, to = f'GeL2MDT CaseAlert', 'gel2mdt.technicalsupport@nhs.net', 'GELTeam@gosh.nhs.uk'
         msg = EmailMessage(subject, text_content, from_email, [to])
         try:
             msg.send()
@@ -351,7 +380,6 @@ class VariantAdder(object):
         self.transcript_entries = []
         self.proband_variant = None
         self.pv_flag = None
-
         self.run_vep()
         self.insert_genes()
         self.insert_transcripts()
@@ -703,6 +731,7 @@ def create_bokeh_barplot(names, values, title):
     plot.legend.orientation = "horizontal"
     plot.legend.location = "top_center"
     return plot
+
 
 class ReportHistoryFormatter:
     def __init__(self, report):

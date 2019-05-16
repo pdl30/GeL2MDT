@@ -3,8 +3,6 @@ FROM python:3.6
 
 # Maintainer
 MAINTAINER Patrick Lombard<patrick.lombard@gosh.nhs.uk>
-ENV http_proxy=http://10.101.112.70:8080
-ENV https_proxy=http://10.101.112.70:8080
 # Install prequisites (last four entries added by me - PD)
 RUN apt-get update && apt-get -y install \
     libpq-dev \
