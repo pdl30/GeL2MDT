@@ -982,7 +982,6 @@ def add_hyperlink_into_run(paragraph, run, url):
     paragraph._p.insert(i+1,hyperlink)
 
 
-# TODO:
 def write_npf_template(report):
     '''
     Place holder for new npf export function.
@@ -1002,7 +1001,25 @@ def write_npf_template(report):
     font.name = 'Arial'
     font.size = Pt(10)
 
-    # demographics as a table
+    # demographics as custom table style created in the docx template
+    # setup new vars for text
+    try:
+        # reporting gender as single string
+        sex = report.ir_family.participant_family.proband.sex
+        sex_abbrev = list(sex)[0].upper()
+
+        # using gender pronoun in text
+        sex = sex.lower()
+        if sex == 'male':
+            gender_pronoun = 'his'
+        elif sex == 'female':
+            gender_pronoun = 'her'
+    except ValueError:
+        raise ValueError
+
+    # report date stamp
+    now = datetime.now()
+
     table = document.add_table(rows=4, cols=2, style='Grid Table Plain')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         f'{report.ir_family.participant_family.clinician.name}')
@@ -1017,7 +1034,7 @@ def write_npf_template(report):
     run.bold = True
     run = table.rows[1].cells[1].paragraphs[0].add_run(
         f'{report.ir_family.participant_family.proband.date_of_birth.date()} / '
-        f'{report.ir_family.participant_family.proband.sex}')
+        f'{sex_abbrev}')
     run = table.rows[2].cells[1].paragraphs[0].add_run(
         f'NHS number:\t\t')
     run.bold = True
@@ -1040,38 +1057,51 @@ def write_npf_template(report):
     paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run.bold = False
 
-    now = datetime.now()
-
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
         f'Date: '
-        f'{now.strftime("%d/%m/%Y")}\n\n'
-        )
+        f'{now.strftime("%d/%m/%Y")}\n\n\n')
     
     clincian = report.ir_family.participant_family.clinician.name
     clincian_surname = clincian.rsplit(' ', 1)[1]
     run = paragraph.add_run(
-        f'Dear Dr {clincian_surname},'
-    )
+        f'Dear Dr {clincian_surname},')
+
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
         f'The above named patient and their family are participanting in the 100,000 Genomics Project to '
-        f'find the cause of {report.ir_family.participant_family.proband.forename}\'s rare disease.'
-    )
+        f'find the cause of {report.ir_family.participant_family.proband.forename}\'s rare disease. '
+        f'Whole genome sequencing * has been completed by Genomics England and the primary analysis has not '
+        f'identified any underlying genetic cause for {gender_pronoun} clinical presentation. Please refer to the attached '
+        f'Genomics England report for information on the genes included in the primary analysis. If panels '
+        f'appropriate to the patient phenotype have not been applied please contact the laboratory.')
 
-    paragraph = document.add_paragraph()
+    paragraph = document.add_paragraph(
+        f'The genome sequencing data will be stored and may be re-analysed in the future as part of the ongoing '
+        f'100,000 Genome Project. If this identifies a possible genetic diagnosis we will re-contact you.')
 
-    paragraph = document.add_paragraph()
+    paragraph = document.add_paragraph(
+        f'The analysis reported to date does not include analysis for ‘additional findings’ unrelated to the '
+        f'clinical presentation. The results of the additional findings analysis will be reported separately '
+        f'and at a later date to participants who have consented to receive these.')
 
-    paragraph = document.add_paragraph()
+    paragraph = document.add_paragraph(
+        f'Please can you thank this family for their continuing participation in the 100,000 Genomes Project. '
+        f'This letter should be stored in {report.ir_family.participant_family.proband.forename}\'s medical records '
+        f'as a record of the result.')
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
-        f'Authorised by:\n\n'
-        f'[ADD CLINICAL SCIENTIST]')
+        f'Authorised by:\n\n\n\n\n\n\n\n\n\n\n\n')
 
-
-
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run(
+        f'* The whole genome sequencing analysis focussed on a panel of genes known to cause this patient’s condition '
+        f'and is able to detect single nucleotide variants and small insertions/deletions. The analysis does not currently '
+        f'detect larger copy number variants, deep intronic variants, structural abnormalities or variants on the '
+        f'Y chromosome. Development and validation of software tools to identify such variants is in progress.'
+    )
+    run.font.size = Pt(8)
 
     return document
 
