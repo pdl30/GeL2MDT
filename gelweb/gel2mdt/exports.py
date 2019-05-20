@@ -1002,42 +1002,7 @@ def write_npf_template(report):
     font.name = 'Arial'
     font.size = Pt(10)
 
-
-    # demo2
-    paragraph = document.add_paragraph()
-    run = paragraph.add_run(
-        f'Dr {report.ir_family.participant_family.clinician.name}')
-    run = paragraph.add_run(
-        f'\t\t\t\t\t\t'
-        f'Patient Name:\t\t')
-    run.bold = True
-    run = paragraph.add_run(
-        f'{report.ir_family.participant_family.proband.forename} '
-        f'{report.ir_family.participant_family.proband.surname}\n')
-    run = paragraph.add_run(
-        f'[ENTER ADDRESS]')
-    run = paragraph.add_run(
-        f'\t\t\t\t\t'
-        f'Date of Birth / Gender:\t')
-    run.bold = True
-    run = paragraph.add_run(
-        f'{report.ir_family.participant_family.proband.date_of_birth.date()} / '
-        f'{report.ir_family.participant_family.proband.sex}\n')
-    run = paragraph.add_run(
-        f'\t\t\t\t\t\t\t'
-        f'NHS number:\t\t')
-    run.bold = True
-    run = paragraph.add_run(
-        f'{report.ir_family.participant_family.proband.nhs_number}\n')
-    run = paragraph.add_run(
-        f'\t\t\t\t\t\t\t'
-        f'GEL ID Number:\t')
-    run.bold = True
-    run = paragraph.add_run(
-        f'{report.ir_family.ir_family_id} / '
-        f'{report.ir_family.participant_family.proband.gel_id}')
-
-    '''# demographics as a table
+    # demographics as a table
     table = document.add_table(rows=4, cols=2, style='Grid Table Plain')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         f'{report.ir_family.participant_family.clinician.name}')
@@ -1063,11 +1028,7 @@ def write_npf_template(report):
     run.bold = True
     run = table.rows[3].cells[1].paragraphs[0].add_run(
         f'{report.ir_family.ir_family_id} / '
-        f'{report.ir_family.participant_family.proband.gel_id}')'''
-    
-    
-    
-    ##
+        f'{report.ir_family.participant_family.proband.gel_id}')
       
     # main text
     paragraph = document.add_paragraph()
