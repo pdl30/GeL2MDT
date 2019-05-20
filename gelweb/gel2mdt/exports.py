@@ -979,3 +979,59 @@ def add_hyperlink_into_run(paragraph, run, url):
     hyperlink.set(oxml.shared.qn('r:id'), r_id, )
     hyperlink.append(run._r)
     paragraph._p.insert(i+1,hyperlink)
+
+
+# TODO:
+def write_npf_template(report):
+    '''
+    Place holder for new npf export function.
+    Using gtab currently.
+    '''
+    # footers template, page number setup
+    template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='npf_glh_negative_report_template.docx'))
+    document = Document(docx=template_file) 
+
+    sections = document.sections
+    for section in sections:
+        section.left_margin = Inches(0.5)
+        section.right_margin = Inches(0.5)
+
+    style = document.styles['Normal']
+    font = style.font
+    font.name = 'Arial'
+    font.size = Pt(10)
+
+
+    # Section. DEMOGRAPHICS.
+    table = document.add_table(rows=4, cols=2, style='Table Grid')
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f'{report.ir_family.participant_family.clinician.name}')
+    run = table.rows[0].cells[1].paragraphs[0].add_run(
+        f'Patient Name:\t\t')
+    run.bold = True
+    run = table.rows[0].cells[1].paragraphs[0].add_run(
+        f'{report.ir_family.participant_family.proband.forename} '
+        f'{report.ir_family.participant_family.proband.surname}')
+    run = table.rows[1].cells[1].paragraphs[0].add_run(
+        f'Date of Birth / Gender:\t')
+    run.bold = True
+    run = table.rows[1].cells[1].paragraphs[0].add_run(
+        f'{report.ir_family.participant_family.proband.date_of_birth.date()} / '
+        f'{report.ir_family.participant_family.proband.sex}')
+    run = table.rows[2].cells[1].paragraphs[0].add_run(
+        f'NHS number:\t\t')
+    run.bold = True
+    run = table.rows[2].cells[1].paragraphs[0].add_run(
+        f'{report.ir_family.participant_family.proband.nhs_number}')
+    run = table.rows[3].cells[1].paragraphs[0].add_run(
+        f'CIP ID / Participant ID:\t')
+    run.bold = True
+    run = table.rows[3].cells[1].paragraphs[0].add_run(
+        f'{report.ir_family.ir_family_id} / '
+        f'{report.ir_family.participant_family.proband.gel_id}')
+    
+
+
+
+    return document
+
