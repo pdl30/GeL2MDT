@@ -360,7 +360,8 @@ class GELInterpretationReport(models.Model):
         ('DECEASED', 'DECEASED'),
         ('DNAREQ', 'DNAREQ'),
         ('RETURN', 'RETURN'),
-        ('AUTHREQ', 'AUTHREQ')),)
+        ('AUTHREQ', 'AUTHREQ'),
+        ('ADDPANEL', 'ADDPANEL')),)
     first_check = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
