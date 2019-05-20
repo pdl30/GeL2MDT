@@ -29,6 +29,7 @@ from docx.enum.style import WD_STYLE
 from django.conf import settings
 import os
 from docx.shared import Pt, Inches, RGBColor, Cm
+from datetime import datetime
 
 
 def write_mdt_export(mdt_instance, mdt_reports):
@@ -1002,8 +1003,42 @@ def write_npf_template(report):
     font.size = Pt(10)
 
 
-    # Section. DEMOGRAPHICS.
-    table = document.add_table(rows=4, cols=2, style='Table Grid')
+    # demo2
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run(
+        f'Dr {report.ir_family.participant_family.clinician.name}')
+    run = paragraph.add_run(
+        f'\t\t\t\t\t\t'
+        f'Patient Name:\t\t')
+    run.bold = True
+    run = paragraph.add_run(
+        f'{report.ir_family.participant_family.proband.forename} '
+        f'{report.ir_family.participant_family.proband.surname}\n')
+    run = paragraph.add_run(
+        f'[ENTER ADDRESS]')
+    run = paragraph.add_run(
+        f'\t\t\t\t\t'
+        f'Date of Birth / Gender:\t')
+    run.bold = True
+    run = paragraph.add_run(
+        f'{report.ir_family.participant_family.proband.date_of_birth.date()} / '
+        f'{report.ir_family.participant_family.proband.sex}\n')
+    run = paragraph.add_run(
+        f'\t\t\t\t\t\t\t'
+        f'NHS number:\t\t')
+    run.bold = True
+    run = paragraph.add_run(
+        f'{report.ir_family.participant_family.proband.nhs_number}\n')
+    run = paragraph.add_run(
+        f'\t\t\t\t\t\t\t'
+        f'GEL ID Number:\t')
+    run.bold = True
+    run = paragraph.add_run(
+        f'{report.ir_family.ir_family_id} / '
+        f'{report.ir_family.participant_family.proband.gel_id}')
+
+    '''# demographics as a table
+    table = document.add_table(rows=4, cols=2, style='Grid Table Plain')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         f'{report.ir_family.participant_family.clinician.name}')
     run = table.rows[0].cells[1].paragraphs[0].add_run(
@@ -1028,8 +1063,52 @@ def write_npf_template(report):
     run.bold = True
     run = table.rows[3].cells[1].paragraphs[0].add_run(
         f'{report.ir_family.ir_family_id} / '
-        f'{report.ir_family.participant_family.proband.gel_id}')
+        f'{report.ir_family.participant_family.proband.gel_id}')'''
     
+    
+    
+    ##
+      
+    # main text
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run('\nNorth Thames Genomic Medicine Centre\n')
+    run.font.size = Pt(14)
+    run.bold = True
+    run = paragraph.add_run('100,000 Genomics Project Feedback\n')
+    run.font.size = Pt(10)
+    paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    run.bold = False
+
+    now = datetime.now()
+
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run(
+        f'Date: '
+        f'{now.strftime("%d/%m/%Y")}\n\n'
+        )
+    
+    clincian = report.ir_family.participant_family.clinician.name
+    clincian_surname = clincian.rsplit(' ', 1)[1]
+    run = paragraph.add_run(
+        f'Dear Dr {clincian_surname},'
+    )
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run(
+        f'The above named patient and their family are participanting in the 100,000 Genomics Project to '
+        f'find the cause of {report.ir_family.participant_family.proband.forename}\'s rare disease.'
+    )
+
+    paragraph = document.add_paragraph()
+
+    paragraph = document.add_paragraph()
+
+    paragraph = document.add_paragraph()
+
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run(
+        f'Authorised by:\n\n'
+        f'[ADD CLINICAL SCIENTIST]')
+
 
 
 
