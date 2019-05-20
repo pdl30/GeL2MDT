@@ -35,7 +35,7 @@ from django.contrib.auth.models import User, Group
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.forms import modelformset_factory
 
-from easy_pdf.rendering import render_to_pdf_response
+from easy_pdf.rendering import render_to_pdf_response, make_response
 from .config import load_config
 from .forms import *
 from .filters import *
@@ -1609,6 +1609,7 @@ def report(request, report_id, outcome):
     document.save(f)
     length = f.tell()
     f.seek(0)
+    
     response = HttpResponse(
         f.getvalue(),
         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
@@ -1621,20 +1622,7 @@ def report(request, report_id, outcome):
     response['Content-Length'] = length
     return response
 
-    '''
-    # TODO: No need to render to html
-    return render_to_pdf_response(
-        request=request,
-        template='gel2mdt/technical_information.html',
-        context={
-            'outcome': outcome,
-            'build': genome_build,
-            'report': report,
-            'reported_variants': reported_variants,
-            'panels': panel_genes
-        }
-    )
-    '''
+     
 
 
 @login_required

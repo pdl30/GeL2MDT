@@ -984,10 +984,11 @@ def add_hyperlink_into_run(paragraph, run, url):
 
 def write_npf_template(report):
     '''
-    Place holder for new npf export function.
-    Using gtab currently.
+    Given a report, write a No Primary Findings (NPF) report
+    :param report: GELInterpretation instance
+    :return: docx document to be exported
     '''
-    # footers template, page number setup
+    # template with headers, page number and custom Grid Table Plain setup
     template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='npf_glh_negative_report_template.docx'))
     document = Document(docx=template_file) 
 
@@ -1006,8 +1007,7 @@ def write_npf_template(report):
     try:
         # reporting gender as single string
         sex = report.ir_family.participant_family.proband.sex
-        sex_abbrev = list(sex)[0].upper()
-
+        
         # using gender pronoun in text
         sex = sex.lower()
         if sex == 'male':
@@ -1017,12 +1017,18 @@ def write_npf_template(report):
     except ValueError:
         raise ValueError
 
-    # report date stamp
+    # export letter date stamp
     now = datetime.now()
 
-    table = document.add_table(rows=4, cols=2, style='Grid Table Plain')
+    # Negative report function is avaliable for both sample types
+    if report.sample_type == 'raredisease':
+        sample_type = 'rare disease'
+    else:
+        sample_type = 'cancer'
+    
+    table = document.add_table(rows=5, cols=2, style='Grid Table Plain')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
-        f'{report.ir_family.participant_family.clinician.name}')
+        f'Dr {report.ir_family.participant_family.clinician.name}')
     run = table.rows[0].cells[1].paragraphs[0].add_run(
         f'Patient Name:\t\t')
     run.bold = True
@@ -1033,8 +1039,8 @@ def write_npf_template(report):
         f'Date of Birth / Gender:\t')
     run.bold = True
     run = table.rows[1].cells[1].paragraphs[0].add_run(
-        f'{report.ir_family.participant_family.proband.date_of_birth.date()} / '
-        f'{sex_abbrev}')
+        f'{report.ir_family.participant_family.proband.date_of_birth.date().strftime("%d-%m-%Y")} / '
+        f'{list(report.ir_family.participant_family.proband.sex)[0].upper()}')
     run = table.rows[2].cells[1].paragraphs[0].add_run(
         f'NHS number:\t\t')
     run.bold = True
@@ -1069,9 +1075,9 @@ def write_npf_template(report):
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
-        f'The above named patient and their family are participanting in the 100,000 Genomics Project to '
-        f'find the cause of {report.ir_family.participant_family.proband.forename}\'s rare disease. '
-        f'Whole genome sequencing * has been completed by Genomics England and the primary analysis has not '
+        f'The above named patient and their family are participating in the 100,000 Genomics Project to '
+        f'find the cause of {report.ir_family.participant_family.proband.forename}\'s {sample_type}. '
+        f'Whole genome sequencing* has been completed by Genomics England and the primary analysis has not '
         f'identified any underlying genetic cause for {gender_pronoun} clinical presentation. Please refer to the attached '
         f'Genomics England report for information on the genes included in the primary analysis. If panels '
         f'appropriate to the patient phenotype have not been applied please contact the laboratory.')
