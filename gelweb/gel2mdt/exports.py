@@ -988,6 +988,8 @@ def write_npf_template(report):
     :param report: GELInterpretation instance
     :return: docx document to be exported
     '''
+    print("Report:", report)
+    
     # template with headers, page number and custom Grid Table Plain setup
     template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='npf_glh_negative_report_template.docx'))
     document = Document(docx=template_file) 
@@ -1005,14 +1007,11 @@ def write_npf_template(report):
     # demographics as custom table style created in the docx template
     # setup new vars for text
     try:
-        # reporting gender as single string
-        sex = report.ir_family.participant_family.proband.sex
-        
         # using gender pronoun in text
-        sex = sex.lower()
-        if sex == 'male':
+        sex = report.ir_family.participant_family.proband.sex
+        if sex.lower() == 'male':
             gender_pronoun = 'his'
-        elif sex == 'female':
+        elif sex.lower() == 'female':
             gender_pronoun = 'her'
     except ValueError:
         raise ValueError
@@ -1020,7 +1019,8 @@ def write_npf_template(report):
     # export letter date stamp
     now = datetime.now()
 
-    # Negative report function is avaliable for both sample types
+    # negative report function is avaliable for both sample types, this is
+    # used within text for any future cancer requirement.
     if report.sample_type == 'raredisease':
         sample_type = 'rare disease'
     else:
@@ -1047,7 +1047,7 @@ def write_npf_template(report):
     run = table.rows[2].cells[1].paragraphs[0].add_run(
         f'{report.ir_family.participant_family.proband.nhs_number}')
     run = table.rows[3].cells[1].paragraphs[0].add_run(
-        f'CIP ID / Participant ID:\t')
+        f'GEL ID:\t\t')
     run.bold = True
     run = table.rows[3].cells[1].paragraphs[0].add_run(
         f'{report.ir_family.ir_family_id} / '
@@ -1094,7 +1094,7 @@ def write_npf_template(report):
     paragraph = document.add_paragraph(
         f'Please can you thank this family for their continuing participation in the 100,000 Genomes Project. '
         f'This letter should be stored in {report.ir_family.participant_family.proband.forename}\'s medical records '
-        f'as a record of the result.')
+        f'as a record of the result.\n\n')
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run(

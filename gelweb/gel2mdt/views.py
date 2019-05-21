@@ -1609,7 +1609,7 @@ def report(request, report_id, outcome):
     document.save(f)
     length = f.tell()
     f.seek(0)
-    
+
     response = HttpResponse(
         f.getvalue(),
         content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
