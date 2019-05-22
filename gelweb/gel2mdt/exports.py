@@ -1002,7 +1002,7 @@ def write_npf_template(report):
     style = document.styles['Normal']
     font = style.font
     font.name = 'Arial'
-    font.size = Pt(10)
+    font.size = Pt(10.5)
 
     # demographics as custom table style created in the docx template
     # setup new vars for text
@@ -1030,24 +1030,24 @@ def write_npf_template(report):
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         f'Dr {report.ir_family.participant_family.clinician.name}')
     run = table.rows[0].cells[1].paragraphs[0].add_run(
-        f'Patient Name:\t\t')
+        f'Patient Name:\t\t  ')
     run.bold = True
     run = table.rows[0].cells[1].paragraphs[0].add_run(
         f'{report.ir_family.participant_family.proband.forename} '
         f'{report.ir_family.participant_family.proband.surname}')
     run = table.rows[1].cells[1].paragraphs[0].add_run(
-        f'Date of Birth / Gender:\t')
+        f'Date of Birth / Gender: ')
     run.bold = True
     run = table.rows[1].cells[1].paragraphs[0].add_run(
         f'{report.ir_family.participant_family.proband.date_of_birth.date().strftime("%d-%m-%Y")} / '
         f'{list(report.ir_family.participant_family.proband.sex)[0].upper()}')
     run = table.rows[2].cells[1].paragraphs[0].add_run(
-        f'NHS number:\t\t')
+        f'NHS number:\t\t  ')
     run.bold = True
     run = table.rows[2].cells[1].paragraphs[0].add_run(
         f'{report.ir_family.participant_family.proband.nhs_number}')
     run = table.rows[3].cells[1].paragraphs[0].add_run(
-        f'GEL ID:\t\t')
+        f'GEL ID:\t\t  ')
     run.bold = True
     run = table.rows[3].cells[1].paragraphs[0].add_run(
         f'{report.ir_family.ir_family_id} / '
@@ -1056,10 +1056,10 @@ def write_npf_template(report):
     # main text
     paragraph = document.add_paragraph()
     run = paragraph.add_run('\nNorth Thames Genomic Medicine Centre\n')
-    run.font.size = Pt(14)
+    run.font.size = Pt(13)
     run.bold = True
     run = paragraph.add_run('100,000 Genomics Project Feedback\n')
-    run.font.size = Pt(10)
+    run.font.size = Pt(12)
     paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run.bold = False
 
@@ -1098,7 +1098,7 @@ def write_npf_template(report):
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
-        f'Authorised by:\n\n\n\n\n\n\n\n\n\n\n\n')
+        f'Authorised by:\n\n\n\n\n')
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
@@ -1107,7 +1107,7 @@ def write_npf_template(report):
         f'detect larger copy number variants, deep intronic variants, structural abnormalities or variants on the '
         f'Y chromosome. Development and validation of software tools to identify such variants is in progress.'
     )
-    run.font.size = Pt(8)
+    run.font.size = Pt(10)
 
     return document
 
