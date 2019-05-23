@@ -1009,13 +1009,14 @@ def write_npf_template(report):
     try:
         # using gender pronoun in text
         sex = report.ir_family.participant_family.proband.sex
-        
-        if sex.lower() == 'male':
-            gender_pronoun = 'his'
-            sex = list(report.ir_family.participant_family.proband.sex)[0].upper()
-        elif sex.lower() == 'female':
-            gender_pronoun = 'her'
-            sex = list(report.ir_family.participant_family.proband.sex)[0].upper()
+
+        if not (sex is None or sex == 'unknown'):
+            if sex.lower() == 'male':
+                gender_pronoun = 'his'
+                sex = list(report.ir_family.participant_family.proband.sex)[0].upper()
+            elif sex.lower() == 'female':
+                gender_pronoun = 'her'
+                sex = list(report.ir_family.participant_family.proband.sex)[0].upper()
         else:
             sex = '<--Unknown-->'
             gender_pronoun = '<--his/her-->'
