@@ -1004,17 +1004,24 @@ def write_npf_template(report):
     font.name = 'Arial'
     font.size = Pt(10.5)
 
-    # demographics as custom table style created in the docx template
-    # setup new vars for text
+    # Demographics as a custom table style created in the docx template.
+    # Setup gender and pronoun for text. If no gender, highlight in template
     try:
         # using gender pronoun in text
         sex = report.ir_family.participant_family.proband.sex
+        
         if sex.lower() == 'male':
             gender_pronoun = 'his'
+            sex = list(report.ir_family.participant_family.proband.sex)[0].upper()
         elif sex.lower() == 'female':
             gender_pronoun = 'her'
-    except ValueError:
-        raise ValueError
+            sex = list(report.ir_family.participant_family.proband.sex)[0].upper()
+        else:
+            sex = '<--Unknown-->'
+            gender_pronoun = '<--his/her-->'
+    except ValueError as e:
+        print(e)
+        raise
 
     # export letter date stamp
     now = datetime.now()
@@ -1040,7 +1047,7 @@ def write_npf_template(report):
     run.bold = True
     run = table.rows[1].cells[1].paragraphs[0].add_run(
         f'{report.ir_family.participant_family.proband.date_of_birth.date().strftime("%d-%m-%Y")} / '
-        f'{list(report.ir_family.participant_family.proband.sex)[0].upper()}')
+        f'{sex}')
     run = table.rows[2].cells[1].paragraphs[0].add_run(
         f'NHS number:\t\t  ')
     run.bold = True
