@@ -24,11 +24,17 @@ SOFTWARE.
 
 {% block content %}
  <div class="container-fluid" >
+  <h2>Request Access to GeL2MDT</h2>
+  <p>The GeL2MDT service is available to clinical scientists in support of the 100k Genome Project for the North Thames and West London GMCs only.<br>
+  To request access to GeL2MDT please complete the <a href='/register/access'> GeL2MDT access request form</a> and the below registration.</p>
   <h2>Register</h2>
+  
 {% if registered %}
       <strong>Thank you for registering!</strong><br />
 
-      Your Username is <h3>{{username}}</h3>. Please take note of this.<br /><br />
+      Your Username is <h3>{{username}}</h3> Please take note of this.<br /><br />
+
+      <p>Once you have been authorised a member of the clinical team at GOSH will email you to confirm account activation.<br></p>
 
       <a href="/">Return to the homepage.</a><br />
  </div>

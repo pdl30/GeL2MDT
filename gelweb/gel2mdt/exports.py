@@ -1119,3 +1119,14 @@ def write_npf_template(report):
 
     return document
 
+
+def access_request_template():
+    '''
+    Another step added to the registration process.
+    Formalising approval of user by line management.
+    return: docx document to be exported
+    '''
+    template_filename = 'gel2mdt_access_request_template.docx'
+    template_path = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename=template_filename))
+    document = Document(docx=template_path)
+    return document

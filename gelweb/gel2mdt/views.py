@@ -40,7 +40,7 @@ from .config import load_config
 from .forms import *
 from .filters import *
 from .tasks import *
-from .exports import write_mdt_outcome_template, write_mdt_export, write_gtab_template, monthly_not_completed, write_npf_template
+from .exports import write_mdt_outcome_template, write_mdt_export, write_gtab_template, monthly_not_completed, write_npf_template, access_request_template
 from .api.api_views import *
 from .database_utils.multiple_case_adder import MultipleCaseAdder
 from .vep_utils.run_vep_batch import CaseVariant
@@ -151,6 +151,8 @@ def register(request):
                 user.set_password(user.password)
                 user.save()
                 registered = True
+                email_admin_on_registration(registered, first_name, last_name, username)
+
                 if role == 'Clinical Scientist':
                     cs, created = ClinicalScientist.objects.get_or_create(
                         email=email)
@@ -1628,12 +1630,6 @@ def report(request, report_id, outcome):
     return redirect('proband-view', report_id=report_id)
 
 
-
-    
-
-     
-
-
 @login_required
 def genomics_england_report(request, report_id):
     """
@@ -1851,3 +1847,25 @@ def export_monthly_report(request):
         except ValueError as error:
             messages.add_message(request, 40, 'Something went wrong, please contact gel2mdt.technicalsupport@nhs.net')
             return HttpResponseRedirect(f'/user_admin')
+
+
+def register_access(request):
+    '''
+    Another step added to the registration process.
+    Formalising approval of user by line management.
+    returns: docx document to be exported
+    '''
+    document = access_request_template()
+    f = BytesIO()
+    document.save(f)
+    length = f.tell()
+    f.seek(0)
+    response = HttpResponse(
+        f.getvalue(),
+        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+    filename = 'GeL2MDT access request form.docx'
+    response['Content-Disposition'] = 'attachment; filename=' + filename
+    response['Content-Length'] = length
+    return response
+
