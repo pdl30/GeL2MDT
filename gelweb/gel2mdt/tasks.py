@@ -795,3 +795,21 @@ class ReportHistoryFormatter:
                 if new_subset[field] != old_subset[field]:
                     field_diff.append(field)
             return True, field_diff
+
+def email_admin_on_registration(registered, first_name, last_name, username):
+    '''
+    Send email of successful user registration to admin team.
+    params: registered: boolean
+    params: user demographics
+    '''
+    if registered is True:
+        subject, from_email, to = f'GeL2MDT new user {username} has registered', 'gel2mdt.technicalsupport@nhs.net', 'graham.rose@gosh.nhs.uk'
+        text_content = (f'New user registered:\n'
+                        f'First name: {first_name}\n'
+                        f'Last name: {last_name}\n'
+                        f'Username: {username}\n')
+        try:
+            msg = EmailMessage(subject, text_content, from_email, [to])
+            msg.send()
+        except Exception as e:
+            print(e)

@@ -151,6 +151,8 @@ def register(request):
                 user.set_password(user.password)
                 user.save()
                 registered = True
+                email_admin_on_registration(registered, first_name, last_name, username)
+
                 if role == 'Clinical Scientist':
                     cs, created = ClinicalScientist.objects.get_or_create(
                         email=email)
