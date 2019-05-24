@@ -800,7 +800,7 @@ def email_admin_on_registration(registered, first_name, last_name, username):
     '''
     Send email of successful user registration to admin team.
     params: registered: boolean
-    params: user demographics
+    params: user requesting registration
     '''
     if registered:
         subject, from_email, to = f'GeL2MDT new user registered: {username}', 'gel2mdt.technicalsupport@nhs.net', 'bioinformatics@gosh.nhs.uk'

@@ -1851,7 +1851,8 @@ def export_monthly_report(request):
 
 def register_access(request):
     '''
-    Pre registration layer step
+    Another step added to the registration process.
+    Formalising approval of user by line management.
     returns: docx document to be exported
     '''
     document = access_request_template()

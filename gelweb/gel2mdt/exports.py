@@ -1122,7 +1122,8 @@ def write_npf_template(report):
 
 def access_request_template():
     '''
-    Preregistration step, confirm user and IG status.
+    Another step added to the registration process.
+    Formalising approval of user by line management.
     return: docx document to be exported
     '''
     template_filename = 'gel2mdt_access_request_template.docx'
