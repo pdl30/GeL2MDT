@@ -55,10 +55,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'gel2mdt.tasks.cases_not_completed_email',
         'schedule': crontab(day_of_month=1, minute=0, hour=12),
     },
-    'task-number-six': {
-        'task': 'gel2mdt.tasks.report_export_for_rakib',
-        'schedule': crontab(day_of_week=2, minute=0, hour=12),
-    },
+    #'task-number-six': {
+    #    'task': 'gel2mdt.tasks.report_export_for_rakib',
+    #    'schedule': crontab(day_of_week=2, minute=0, hour=12),
+    #},
 }
 
 EMAIL_HOST = 'smtp.pangosh.nhs.uk'
