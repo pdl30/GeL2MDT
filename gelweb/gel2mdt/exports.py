@@ -1082,18 +1082,20 @@ def write_npf_template(report):
     run = paragraph.add_run(
         f'Dear Dr {clincian_surname},')
 
-    paragraph = document.add_paragraph()
-    run = paragraph.add_run(
+    paragraph = document.add_paragraph(
         f'The above named patient and their family are participating in the 100,000 Genomics Project to '
         f'find the cause of {report.ir_family.participant_family.proband.forename}\'s {sample_type}. '
         f'Whole genome sequencing* has been completed by Genomics England and the primary analysis has not '
-        f'identified any underlying genetic cause for {gender_pronoun} clinical presentation. Please refer to the attached '
-        f'Genomics England report for information on the genes included in the primary analysis. If panels '
-        f'appropriate to the patient phenotype have not been applied please contact the laboratory.')
+        f'identified any underlying genetic cause for {gender_pronoun} clinical presentation.')
+    
+    paragraph = document.add_paragraph(
+        f'Please refer to the attached Genomics England report for information on the genes included in the primary '
+        f'analysis. If panels appropriate to the patient phenotype have not been applied please contact the laboratory.')
 
     paragraph = document.add_paragraph(
-        f'The genome sequencing data will be stored and may be re-analysed in the future as part of the ongoing '
-        f'100,000 Genome Project. If this identifies a possible genetic diagnosis we will re-contact you.')
+        f'The genome sequencing data will be stored. Cases with new HPO terms, changing clinical need and those not '
+        f'analysed for copy number variants (CNVs) will be re-analysed in the future as part of the on-going 100,000 '
+        f'Genomes Project. If this identifies a possible genetic diagnosis we will re-contact you.')
 
     paragraph = document.add_paragraph(
         f'The analysis reported to date does not include analysis for ‘additional findings’ unrelated to the '
@@ -1103,11 +1105,14 @@ def write_npf_template(report):
     paragraph = document.add_paragraph(
         f'Please can you thank this family for their continuing participation in the 100,000 Genomes Project. '
         f'This letter should be stored in {report.ir_family.participant_family.proband.forename}\'s medical records '
-        f'as a record of the result.\n\n')
+        f'as a record of the result.\n')
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
-        f'Authorised by:\n\n\n\n\n')
+        f'Authorised by:\n\n\n\n')
+
+    run = paragraph.add_run(
+        f'GEL.Team@gosh.nhs.uk\n\n')
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
