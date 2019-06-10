@@ -1102,10 +1102,12 @@ def write_npf_template(report):
         f'clinical presentation. The results of the additional findings analysis will be reported separately '
         f'and at a later date to participants who have consented to receive these.')
 
-    paragraph = document.add_paragraph(
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run(
         f'Please can you thank this family for their continuing participation in the 100,000 Genomes Project. '
         f'This letter should be stored in {report.ir_family.participant_family.proband.forename}\'s medical records '
-        f'as a record of the result.\n')
+        f'as a record of the result ')
+    run = paragraph.add_run('and the outcome fed back to the patient by the referring clinician.\n').bold = True
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
