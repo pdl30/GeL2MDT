@@ -993,7 +993,7 @@ def write_npf_template(report):
     
     # template with headers, page number and custom Grid Table Plain setup
     template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='npf_glh_negative_report_template.docx'))
-    document = Document(docx=template_file) 
+    document = Document(docx=template_file)
 
     sections = document.sections
     for section in sections:
@@ -1010,7 +1010,6 @@ def write_npf_template(report):
     try:
         # using gender pronoun in text
         sex = report.ir_family.participant_family.proband.sex
-
         clincian = report.ir_family.participant_family.clinician.name
 
         if not (sex is None or sex == 'unknown'):
@@ -1067,10 +1066,10 @@ def write_npf_template(report):
     # main text
     paragraph = document.add_paragraph()
     run = paragraph.add_run('\nNorth Thames Genomic Medicine Centre\n')
-    run.font.size = Pt(13)
+    run.font.size = Pt(14)
     run.bold = True
-    run = paragraph.add_run('100,000 Genomics Project Feedback\n')
-    run.font.size = Pt(12)
+    run = paragraph.add_run('100,000 Genomes Project Result\n')
+    run.font.size = Pt(11)
     paragraph.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
     run.bold = False
 
@@ -1088,15 +1087,16 @@ def write_npf_template(report):
     run = paragraph.add_run(
         f'Dear Dr {clincian_surname},')
 
-    paragraph = document.add_paragraph(
-        f'The above named patient and their family are participating in the 100,000 Genomics Project to '
-        f'find the cause of {report.ir_family.participant_family.proband.forename}\'s {sample_type}. '
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run(
+        f'The above named participant (and their family where applicable) are participating in the 100,000 Genomes  '
+        f'Project to find the cause of {report.ir_family.participant_family.proband.forename}\'s {sample_type}. ')
+    run = paragraph.add_run(
         f'Whole genome sequencing* has been completed by Genomics England and the primary analysis has not '
-        f'identified any underlying genetic cause for {gender_pronoun} clinical presentation.')
-    
-    paragraph = document.add_paragraph(
+        f'identified any underlying genetic cause for {gender_pronoun} clinical presentation. ').bold = True
+    run = paragraph.add_run(
         f'Please refer to the attached Genomics England report for information on the genes included in the primary '
-        f'analysis. If panels appropriate to the patient phenotype have not been applied please contact the laboratory.')
+        f'analysis. If panels appropriate to the phenotype have not been applied please contact the laboratory.')
 
     paragraph = document.add_paragraph(
         f'The genome sequencing data will be stored. Cases with new HPO terms, changing clinical need and those not '
@@ -1110,26 +1110,25 @@ def write_npf_template(report):
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
-        f'Please can you thank this family for their continuing participation in the 100,000 Genomes Project. '
-        f'This letter should be stored in {report.ir_family.participant_family.proband.forename}\'s medical records '
-        f'as a record of the result ')
-    run = paragraph.add_run('and the outcome fed back to the patient by the referring clinician.\n').bold = True
+        f'Please can you thank {report.ir_family.participant_family.proband.forename} (and their family where applicable) '
+        f'for their continuing participation in the 100,000 Genomes Project. This letter should be stored in '
+        f'{report.ir_family.participant_family.proband.forename}\'s medical records as a record of the result '
+        f'and the outcome fed back to the participant(s) by the referring clinician.\n')
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
-        f'Authorised by:\n\n\n\n')
+        f'Authorised by:\n\n\n')
 
     run = paragraph.add_run(
-        f'GEL.Team@gosh.nhs.uk\n\n')
+        f'Email: GEL.Team@gosh.nhs.uk\n')
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
         f'* The whole genome sequencing analysis focussed on a panel of genes known to cause this patient’s condition '
         f'and is able to detect single nucleotide variants and small insertions/deletions. The analysis does not currently '
         f'detect larger copy number variants, deep intronic variants, structural abnormalities or variants on the '
-        f'Y chromosome. Development and validation of software tools to identify such variants is in progress.'
-    )
-    run.font.size = Pt(10)
+        f'Y chromosome. Development and validation of software tools to identify such variants is in progress.')
+    run.font.size = Pt(9)
 
     return document
 
