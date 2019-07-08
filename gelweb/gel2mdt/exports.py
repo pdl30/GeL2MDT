@@ -1011,6 +1011,8 @@ def write_npf_template(report):
         # using gender pronoun in text
         sex = report.ir_family.participant_family.proband.sex
 
+        clincian = report.ir_family.participant_family.clinician.name
+
         if not (sex is None or sex == 'unknown'):
             if sex.lower() == 'male':
                 gender_pronoun = 'his'
@@ -1037,7 +1039,7 @@ def write_npf_template(report):
     
     table = document.add_table(rows=5, cols=2, style='Grid Table Plain')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
-        f'Dr {report.ir_family.participant_family.clinician.name}')
+        f'Dr {clincian}')
     run = table.rows[0].cells[1].paragraphs[0].add_run(
         f'Patient Name:\t\t  ')
     run.bold = True
@@ -1077,8 +1079,12 @@ def write_npf_template(report):
         f'Date: '
         f'{now.strftime("%d/%m/%Y")}\n\n\n')
     
-    clincian = report.ir_family.participant_family.clinician.name
-    clincian_surname = clincian.rsplit(' ', 1)[1]
+    # handle clincians entered without fullname
+    if ' ' in clincian:
+        clincian_surname = clincian.rsplit(' ', 1)[1]
+    else:
+        clincian_surname = clincian 
+    
     run = paragraph.add_run(
         f'Dear Dr {clincian_surname},')
 
