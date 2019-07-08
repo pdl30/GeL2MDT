@@ -620,7 +620,7 @@ function fetchDataTable(caseType, genomeBuild, maxTier, caseStatus) {
                     "data": "id",
                     "render": function (data, type, row, meta) {
                         if (type === 'display') {
-                            data = '<a href="proband/' + data + '">' + '<i class="fas fa-external-link-alt"></i>' + '</a>';
+                            data = '<a href="proband/' + data + '" target="_blank">' + '<i class="fas fa-external-link-alt"></i>' + '</a>';
                         }
                         return data;
                     },
@@ -718,7 +718,7 @@ function fetchDataTable(caseType, genomeBuild, maxTier, caseStatus) {
                     "data": "id",
                     "render": function (data, type, row, meta) {
                         if (type === 'display') {
-                            data = '<a href="proband/' + data + '">' + '<i class="fas fa-external-link-alt"></i>' + '</a>';
+                            data = '<a href="proband/' + data + '" target="_blank">' + '<i class="fas fa-external-link-alt"></i>' + '</a>';
                         }
                         return data;
                     },
