@@ -140,10 +140,18 @@ SOFTWARE.
                                                 <th>Forename</th>
                                                 <th>Surname</th>
                                                 <th>NHS No.</th>
+                                                {% if sample_type == 'cancer' %}
+                                                <th>Sex</th>
+                                                <th>Date of Birth</th>
+                                                {% endif %}
                                                 <th>GMC</th>
                                                 <th>Clinician</th>
                                                 <th>Discussion</th>
                                                 <th>Action</th>
+                                                {% if sample_type == 'cancer' %}
+                                                <th>Case Status</th>
+                                                <th>Case Code</th>
+                                                {% endif %}
                                                 <th>Edit Important Variants</th>
                                                 {% if sample_type == 'raredisease' %}
                                                 <th>Edit CNVs</th>
@@ -201,7 +209,7 @@ SOFTWARE.
                     action: function ( e, dt, node, config ) {
                         if(config.text == 'Show compact table') {
                             if(sample_type == 'cancer') {
-                                table.columns( [5,10,11,12,13] ).visible( false );
+                                table.columns( [5,6,7,11,12,14,15,16,17] ).visible( false );
                             }
                             else if(sample_type == 'raredisease') {
                                 table.columns( [5,12,13,14,15] ).visible( false );
