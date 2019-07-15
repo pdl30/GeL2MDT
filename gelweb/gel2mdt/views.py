@@ -1004,6 +1004,9 @@ def mdt_proband_view(request, mdt_id, pk, important):
     '''
     mdt_instance = MDT.objects.get(id=mdt_id)
     report = GELInterpretationReport.objects.get(id=pk)
+    other_cases = GELInterpretationReport.objects.latest_cases_by_sample_type(report.sample_type).filter(
+        ir_family__participant_family=report.ir_family.participant_family).exclude(ir_family=report.ir_family)
+
     proband_variants = []
     proband_variants_all = ProbandVariant.objects.filter(interpretation_report=report)
     for pv in proband_variants_all:
@@ -1077,8 +1080,9 @@ def mdt_proband_view(request, mdt_id, pk, important):
         'proband_form': proband_form,
         'variant_formset': variant_formset,
         'panels': panels,
-        'sample_type':report.sample_type,
-        'gelir_form':gelir_form,
+        'sample_type': report.sample_type,
+        'gelir_form': gelir_form,
+        'other_cases': other_cases,
     })
 
 @login_required

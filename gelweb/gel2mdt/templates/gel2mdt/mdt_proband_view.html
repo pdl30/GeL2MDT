@@ -61,7 +61,16 @@ SOFTWARE.
                                 <div class="block">
                                     {{report.ir_family.participant_family.proband.date_of_birth|date}}
                                 </div>
-
+                                </br>
+                                {% if other_cases %}
+                                    {% bootstrap_label "Other Interpretations" %}
+                                    <div class="block">
+                                    {% for case in other_cases %}
+                                        <a href="/proband/{{case.id}}">
+                                            {{case.ir_family.ir_family_id}}</a>
+                                    {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
 
                             <div class="col-md-4">
