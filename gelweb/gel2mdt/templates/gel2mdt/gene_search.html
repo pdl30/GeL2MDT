@@ -91,6 +91,7 @@ SOFTWARE.
                             <th>HGVSc</th>
                             <th>HGVSp</th>
                             <th>HGVSg</th>
+                            <th>Case Status</th>
                         </tr>
                     </thead>
                     <tbody style='font-size: 75%'>
@@ -117,6 +118,7 @@ SOFTWARE.
                                     <td style="word-wrap: break-word; min-width: 200px;max-width: 200px;">{{pv.get_transcript_variant.hgvs_c}}</td>
                                     <td style="word-wrap: break-word; min-width: 200px;max-width: 200px;">{{pv.get_transcript_variant.hgvs_p}}</td>
                                     <td style="word-wrap: break-word; min-width: 200px;max-width: 200px;">{{pv.get_transcript_variant.hgvs_g}}</td>
+                                    <td>{{pv.interpretation_report.get_case_status_display}}</td>
                                    </tr>
 
                         {% endfor %}
