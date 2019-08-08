@@ -1251,6 +1251,7 @@ class GroupPermissions(models.Model):
                                                      help_text="Indicates whether the group can view & edit a Completed Proband")
     can_edit_gelir = models.BooleanField(default=False, help_text="Indicates whether the group can edit Case information")
     can_edit_mdt = models.BooleanField(default=False, help_text="Indicates whether the group can edit MDT questions")
+    can_delete_mdt = models.BooleanField(default=False, help_text="Indicates whether the group can delete an MDT")
     can_get_gel_report = models.BooleanField(default=False, help_text="Indicates whether the group can pull the GEL report")
     can_edit_relative = models.BooleanField(default=False, help_text="Indicates whether the group can edit relative information")
     can_edit_clinical_questions = models.BooleanField(default=False, help_text="Indicates whether the group can edit cancer clinical questions")
