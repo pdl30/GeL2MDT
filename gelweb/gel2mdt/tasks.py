@@ -196,10 +196,19 @@ def get_gel_content(ir, ir_version):
 
     tbody_tag = gel_content.new_tag("tbody")
 
+    # Sort panel keys based on gel report order
+    gel_content_genepanels_order = []
+    gel_content_genepanels_header = gel_content.find('h3',text="Gene Panels")
+    for row in gel_content_genepanels_header.findNext('table').tbody.find_all('tr'):
+        for link in row.find_all('a'):
+            gel_content_genepanels_order.extend(link.contents)
+    panel_keys_sorted = gel_content_genepanels_order
+
     for panel in range(len(panel_keys_sorted)):
         # get the actual name of the panel
         panel_name = panel_keys_sorted[panel]
         panel_genes = gene_panels[panel_name]
+        panel_genes.sort()
         panel_gene_size = len(gene_panels[panel_name])
 
         tr_tag = gel_content.new_tag("tr")
