@@ -211,8 +211,8 @@ def get_gel_content(ir, ir_version):
 
     table_tag.insert(2, tbody_tag)
 
-    #div_tag.insert(1, h3_tag)
-    #div_tag.insert(2, table_tag)'''
+    div_tag.insert(1, h3_tag)
+    div_tag.insert(2, table_tag)'''
     gel_content = gel_content.prettify()
     return gel_content
 
