@@ -172,7 +172,10 @@ def get_gel_content(ir, ir_version):
 
     table_tag = gel_content.new_tag("table")
 
-    h3_tag = gel_content.new_tag("h3")
+    # Commented out the below addition of Gene Panel to the original GeL Report 
+    # as all PanelAll genes were being displayed which is ambigious, and should 
+    # have been only Green genes only. TODO: check if table needed.
+    '''h3_tag = gel_content.new_tag("h3")
     h3_tag.string = 'Gene Panel Specification'
 
     # Table headers and table rows to be inserted after the table tag
@@ -209,7 +212,7 @@ def get_gel_content(ir, ir_version):
     table_tag.insert(2, tbody_tag)
 
     div_tag.insert(1, h3_tag)
-    div_tag.insert(2, table_tag)
+    div_tag.insert(2, table_tag)'''
     gel_content = gel_content.prettify()
     return gel_content
 
