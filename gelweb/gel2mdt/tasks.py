@@ -132,7 +132,7 @@ def get_gel_content(ir, ir_version):
 
     analysis_panels = {}
 
-    panel_app_panel_query_version = 'https://panelapp.genomicsengland.co.uk/api/v1/panels/{panelhash}/?version={version}'
+    panel_app_panel_query_version = 'https://panelapp.genomicsengland.co.uk/WebServices/get_panel/{panelhash}/?version={version}' # matches PollAPI 
     if 'pedigree' in interp_json['interpretation_request_data']['json_request']:
         if interp_json['interpretation_request_data']['json_request']['pedigree']['analysisPanels']:
             for panel_section in interp_json['interpretation_request_data']['json_request']['pedigree']['analysisPanels']:
@@ -141,18 +141,19 @@ def get_gel_content(ir, ir_version):
                 analysis_panels[panel_name] = {}
                 panel_details = requests.get(panel_app_panel_query_version.format(panelhash=panel_name, version=version),
                                              verify=False).json()
-                analysis_panels[panel_name][panel_details['name']] = []
+                analysis_panels[panel_name][panel_details['result']['SpecificDiseaseName']] = []
                 try:
-                    for gene in panel_details['genes']:
-                        analysis_panels[panel_name][panel_details['name']].append(gene['gene_data']['gene_symbol'])
+                    for gene in panel_details['result']['Genes']:
+                        if gene['LevelOfConfidence'] == 'HighEvidence':
+                            analysis_panels[panel_name][panel_details['result']['SpecificDiseaseName']].append(gene['GeneSymbol'])
                 except KeyError:
                     pass
-
+    
     gene_panels = {}
     for panel, details in analysis_panels.items():
         gene_panels.update(details)
 
-    gel_content = BeautifulSoup(gel_content)
+    gel_content = BeautifulSoup(gel_content, 'lxml')
     try:
         # remove any warning signs if they appear in the report
         disclaimer = gel_content.find("div", {"class": "content-div error-panel"}).extract()
@@ -169,14 +170,10 @@ def get_gel_content(ir, ir_version):
 
     # panel_keys = fake_panels.keys()
     panel_keys = list(gene_panels.keys())
+    table_tag = gel_content.new_tag("table id='green_genes'")
 
-    table_tag = gel_content.new_tag("table")
-
-    # Commented out the below addition of Gene Panel to the original GeL Report 
-    # as all PanelAll genes were being displayed which is ambigious, and should 
-    # have been only Green genes only. TODO: check if table needed.
-    '''h3_tag = gel_content.new_tag("h3")
-    h3_tag.string = 'Gene Panel Specification'
+    h3_tag = gel_content.new_tag("h3")
+    h3_tag.string = 'Gene Panel Specification (Green Genes only)'
 
     # Table headers and table rows to be inserted after the table tag
     # tags created to shamelessly rip off the GeL formatting
@@ -184,35 +181,58 @@ def get_gel_content(ir, ir_version):
     tr_tag = gel_content.new_tag("tr")
     th1_tag = gel_content.new_tag("th")
     th2_tag = gel_content.new_tag("th")
+    th3_tag = gel_content.new_tag("th")
 
-    th1_tag.string = 'Genepanel'
+    th1_tag.string = 'Gene Panel Name'
     th2_tag.string = 'Genes'
+    th3_tag.string = 'Gene Panel Size'
+
     tr_tag.insert(1, th1_tag)
     tr_tag.insert(2, th2_tag)
+    tr_tag.insert(3, th3_tag)
     thead_tag.insert(1, tr_tag)
     table_tag.insert(1, thead_tag)
 
     tbody_tag = gel_content.new_tag("tbody")
 
+    # Sort panel keys based on gel report order
+    gel_content_genepanels_order = []
+    try:
+        gel_content_genepanels_header = gel_content.find('h3',text="Gene Panels")
+        for row in gel_content_genepanels_header.findNext('table').tbody.find_all('tr'):
+            for link in row.find_all('a'):
+                gel_content_genepanels_order.extend(link.contents)
+        panel_keys = gel_content_genepanels_order
+    except:
+        pass
+
     for panel in range(len(panel_keys)):
         # get the actual name of the panel
         panel_name = panel_keys[panel]
         panel_genes = gene_panels[panel_name]
+        panel_genes.sort()
+        panel_gene_size = len(gene_panels[panel_name])
 
         tr_tag = gel_content.new_tag("tr")
         td_panel = gel_content.new_tag("td")
         td_panel['width'] = '20%'
         td_genes = gel_content.new_tag("td")
+        td_panelsize = gel_content.new_tag("td")
+        td_panelsize['width'] = '5%'
+
         td_panel.string = panel_name
         td_genes.string = ', '.join(panel_genes)
+        td_panelsize.string = str(panel_gene_size)
+
         tr_tag.insert(1, td_panel)
         tr_tag.insert(2, td_genes)
+        tr_tag.insert(3, td_panelsize)
         tbody_tag.insert(panel, tr_tag)
 
     table_tag.insert(2, tbody_tag)
 
     div_tag.insert(1, h3_tag)
-    div_tag.insert(2, table_tag)'''
+    div_tag.insert(2, table_tag)
     gel_content = gel_content.prettify()
     return gel_content
 
@@ -225,7 +245,7 @@ def panel_app(gene_panel, gp_version):
     :return: Dict with gene list and len of gene list
     '''
     gene_list = []
-    panel_app_panel_query_version = 'https://bioinfo.extge.co.uk/crowdsourcing/WebServices/get_panel/{gene_panel}/?version={gp_version}'
+    panel_app_panel_query_version = 'https://panelapp.genomicsengland.co.uk/WebServices/get_panel/{panelhash}/?version={version}'
     panel_details = requests.get(
         panel_app_panel_query_version.format(gene_panel=gene_panel, gp_version=gp_version), verify=False).json()
 
