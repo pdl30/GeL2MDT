@@ -154,7 +154,7 @@ def get_gel_content(ir, ir_version):
     for panel, details in analysis_panels.items():
         gene_panels.update(details)
 
-    gel_content = BeautifulSoup(gel_content, 'html')
+    gel_content = BeautifulSoup(gel_content, 'lxml')
     try:
         # remove any warning signs if they appear in the report
         disclaimer = gel_content.find("div", {"class": "content-div error-panel"}).extract()
