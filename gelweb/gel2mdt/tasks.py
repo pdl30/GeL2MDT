@@ -132,7 +132,6 @@ def get_gel_content(ir, ir_version):
 
     analysis_panels = {}
 
-    #panel_app_panel_query_version = 'https://panelapp.genomicsengland.co.uk/api/v1/panels/{panelhash}/?version={version}' # original endpoint
     panel_app_panel_query_version = 'https://panelapp.genomicsengland.co.uk/WebServices/get_panel/{panelhash}/?version={version}' # matches PollAPI 
     if 'pedigree' in interp_json['interpretation_request_data']['json_request']:
         if interp_json['interpretation_request_data']['json_request']['pedigree']['analysisPanels']:
@@ -171,7 +170,7 @@ def get_gel_content(ir, ir_version):
 
     # panel_keys = fake_panels.keys()
     panel_keys = list(gene_panels.keys())
-    table_tag = gel_content.new_tag("table")
+    table_tag = gel_content.new_tag("table id='green_genes'")
 
     h3_tag = gel_content.new_tag("h3")
     h3_tag.string = 'Gene Panel Specification (Green Genes only)'
@@ -243,7 +242,7 @@ def panel_app(gene_panel, gp_version):
     :return: Dict with gene list and len of gene list
     '''
     gene_list = []
-    panel_app_panel_query_version = 'https://bioinfo.extge.co.uk/crowdsourcing/WebServices/get_panel/{gene_panel}/?version={gp_version}'
+    panel_app_panel_query_version = 'https://panelapp.genomicsengland.co.uk/WebServices/get_panel/{panelhash}/?version={version}'
     panel_details = requests.get(
         panel_app_panel_query_version.format(gene_panel=gene_panel, gp_version=gp_version), verify=False).json()
 
