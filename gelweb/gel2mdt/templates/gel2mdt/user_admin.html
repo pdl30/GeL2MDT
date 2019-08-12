@@ -63,6 +63,7 @@ SOFTWARE.
                             <th>Can Edit Clinical Questions(Cancer)</th>
                             <th>Can Start MDTs</th>
                             <th>Can Edit MDTs</th>
+                            <th>Can Delete MDT</th>
                             <th>Can View & Edit Case Alerts</th>
                             <th>Can View & Edit Validation List</th>
                             <th>Edit</th>
@@ -158,6 +159,11 @@ SOFTWARE.
                                         {% else %}
                                             <td style="word-wrap: break-word; min-width: 50px;max-width: 50px;"><i class="fas fa-window-close"></i></td>
                                         {% endif %}
+                                    {% if group.grouppermissions.can_delete_mdt %}
+                                            <td style="word-wrap: break-word; min-width: 50px;max-width: 50px;" ><i class="fas fa-check"></i></td>
+                                        {% else %}
+                                            <td style="word-wrap: break-word; min-width: 50px;max-width: 50px;"><i class="fas fa-window-close"></i></td>
+                                        {% endif %}                                        
                                     {% if group.grouppermissions.can_edit_case_alert %}
                                             <td style="word-wrap: break-word; min-width: 50px;max-width: 50px;" ><i class="fas fa-check"></i></td>
                                         {% else %}
