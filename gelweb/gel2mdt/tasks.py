@@ -49,6 +49,7 @@ from django.contrib.auth.models import User, Group
 from .sv_extraction.filter_sv import SVFiltration
 import gc
 from django.db.utils import ProgrammingError, OperationalError
+import re
 
 
 def create_admin_group():
@@ -233,6 +234,41 @@ def get_gel_content(ir, ir_version):
 
     div_tag.insert(1, h3_tag)
     div_tag.insert(2, table_tag)
+
+    # Remove gene size column (col3) from Gene Panels table, known bug at GeL
+    pattern = re.compile(r'Gene Panels')
+    table = gel_content.find('h3', text=pattern).findNext('table')
+    new_header = table.thead.findAll('th')[0:2]
+    
+    table_tag = gel_content.new_tag("table id='panels'")
+    thead_tag = gel_content.new_tag("thead")
+    tr_tag = gel_content.new_tag("tr")
+    th1_tag = gel_content.new_tag("th")
+    th2_tag = gel_content.new_tag("th")
+    tbody_tag = gel_content.new_tag("tbody")
+
+    # New table headers
+    th1_tag = new_header[0]
+    th2_tag = new_header[1]
+    tr_tag.insert(1, th1_tag)
+    tr_tag.insert(2, th2_tag)
+    thead_tag.insert(1, tr_tag)
+    table_tag.insert(1, thead_tag)
+
+    # New table rows
+    row_pos = 1
+    for row in table.tbody.findAll('tr'):
+        tr_tag = gel_content.new_tag("tr")
+        col1 = row.findAll('td')[0]
+        col2 = row.findAll('td')[1]
+        tr_tag.insert(1, col1)
+        tr_tag.insert(1, col2)
+        tbody_tag.insert(row_pos, tr_tag)
+        row_pos += 1
+    table_tag.insert(1, tbody_tag)
+    
+    table.replaceWith(table_tag)
+
     gel_content = gel_content.prettify()
     return gel_content
 
