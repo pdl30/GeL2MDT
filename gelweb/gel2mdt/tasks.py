@@ -406,7 +406,7 @@ def listupdate_email():
                                f'\t{update.cases_added}\t{update.cases_updated}\t{update.error}\n'
     if send:
         subject, from_email, to = 'GeL2MDT ListUpdate', 'gel2mdt.technicalsupport@nhs.net', \
-                                  'bioinformatics@gosh.nhs.uk'
+                                  'gel2mdt.technicalsupport@nhs.net'
         msg = EmailMessage(subject, bioinfo_content, from_email, [to])
         try:
             msg.send()
