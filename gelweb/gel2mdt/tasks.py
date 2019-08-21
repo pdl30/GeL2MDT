@@ -343,7 +343,7 @@ def report_export_for_rakib():
         except Proband.DoesNotExist:
             pass
     output.close()
-    subject, from_email, to = f'GeL2MDT Case Export', 'gel2mdt.technicalsupport@nhs.net', \
+    subject, from_email, to = f'GeL2MDT Case Export', 'root@localhost.e.amses.net', \
                               'rakib.miah1@nhs.net'
     text_content = f'Please see attached report'
     try:
@@ -381,7 +381,7 @@ def case_alert_email():
                     pass
     if sample_types['cancer'] or sample_types['raredisease']:
         text_content = "A Case Alert has been triggered, please visit GEL2MDT to check and remove this alert!"
-        subject, from_email, to = f'GeL2MDT CaseAlert', 'gel2mdt.technicalsupport@nhs.net', 'GELTeam@gosh.nhs.uk'
+        subject, from_email, to = f'GeL2MDT CaseAlert', 'root@localhost.e.amses.net', 'GELTeam@gosh.nhs.uk'
         msg = EmailMessage(subject, text_content, from_email, [to])
         try:
             msg.send()
@@ -405,8 +405,8 @@ def listupdate_email():
             bioinfo_content += f'{update.sample_type}\t{update.update_time}' \
                                f'\t{update.cases_added}\t{update.cases_updated}\t{update.error}\n'
     if send:
-        subject, from_email, to = 'GeL2MDT ListUpdate', 'gel2mdt.technicalsupport@nhs.net', \
-                                  'gel2mdt.technicalsupport@nhs.net'
+        subject, from_email, to = 'GeL2MDT ListUpdate', 'root@localhost.e.amses.net', \
+                                  'bioinformatics@gosh.nhs.uk'
         msg = EmailMessage(subject, bioinfo_content, from_email, [to])
         try:
             msg.send()
