@@ -21,6 +21,5 @@ SOFTWARE.
 """
 from gel2mdt.database_utils.multiple_case_adder import MultipleCaseAdder
 
-#MultipleCaseAdder(sample='215003948', sample_type='cancer', test_data=False, skip_demographics=True, pullt3=False)
 MultipleCaseAdder(sample_type='raredisease', head=None, test_data=False, skip_demographics=False, pullt3=False, bins=100)
 MultipleCaseAdder(sample_type='cancer', head=None, test_data=False, skip_demographics=False, pullt3=False, bins=100)
