@@ -862,7 +862,7 @@ def email_admin_on_registration(registered, first_name, last_name, username):
     params: user requesting registration
     '''
     if registered:
-        subject, from_email, to = f'GeL2MDT new user registered: {username}', 'gel2mdt.technicalsupport@nhs.net', 'bioinformatics@gosh.nhs.uk'
+        subject, from_email, to = f'GeL2MDT new user registered: {username}', 'root@localhost.e.amses.net', 'bioinformatics@gosh.nhs.uk'
         text_content = (f'New user registered:\n\n'
                         f'First name: {first_name}\n'
                         f'Last name: {last_name}\n'
