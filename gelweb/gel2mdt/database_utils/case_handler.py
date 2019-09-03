@@ -1037,8 +1037,10 @@ class CaseAttributeManager(object):
                 if self.case.ir_obj.genePanelsCoverage:
                     panel_coverage = self.case.ir_obj.genePanelsCoverage.get(panel.entry.panel.panelapp_id, {})
                     for gene, coverage_dict in panel_coverage.items():
-                        if float(coverage_dict["_".join((self.case.proband_sample, "gte15x"))]) < 0.95:
-                            genes_failing_coverage.append(gene)
+                        coverage_key = "_".join((self.case.proband_sample, "gte15x"))
+                        if coverage_dict.get(coverage_key):
+                            if float(coverage_dict[coverage_key]) < 0.95:
+                                genes_failing_coverage.append(gene)
 
         genes_failing_coverage = sorted(set(genes_failing_coverage))
         if 'SUMMARY' in genes_failing_coverage: 
