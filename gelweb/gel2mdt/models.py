@@ -702,9 +702,12 @@ class ProbandVariant(models.Model):
             ptv_transcripts = ProbandTranscriptVariant.objects.filter(proband_variant=pv).values_list('transcript__name',
                                                                                                       flat=True)
             if selected_transcript.name in ptv_transcripts:
-                ProbandTranscriptVariant.objects.filter(proband_variant=pv, selected=True).update(selected=False)
-                ProbandTranscriptVariant.objects.filter(proband_variant=pv,
-                                                        transcript=selected_transcript).update(selected=True)
+                # Don't cascade update MT chr transcripts as all MT genes are shown - prevents different transcripts 
+                # being selected if >1 variant in case. Likely VEP error.
+                if pv.variant.chromosome != 'MT':
+                    ProbandTranscriptVariant.objects.filter(proband_variant=pv, selected=True).update(selected=False)
+                    ProbandTranscriptVariant.objects.filter(proband_variant=pv,
+                                                            transcript=selected_transcript).update(selected=True)
 
     def get_transcript_variant(self):
         ptv = ProbandTranscriptVariant.objects.filter(selected=True, proband_variant=self.id)
