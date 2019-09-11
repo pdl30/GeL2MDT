@@ -29,11 +29,13 @@ SOFTWARE.
 <div  class="container-fluid">
 <div class="row">
     <div class="col-lg-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                Cancer Cases
-           </div>
-            <!-- /.panel-heading -->
+    <ul class="nav nav-tabs" data-options="deep_linking: true">
+        <li class="active"><a data-toggle="tab" href="#cases">Cancer Cases</a></li>
+        <li><a data-toggle="tab" href="#pharmacogenomics">Pharmacogenomics</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div id="cases" class="tab-pane fade in active">
             <div class="panel-body">
                 <div class="panel-group">
                     <div class="panel panel-info">
@@ -96,7 +98,7 @@ SOFTWARE.
                                                         GRCh38
                                                     </label>
                                                 </div>
-</td>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td>Max tier:</td>
@@ -312,7 +314,6 @@ SOFTWARE.
                 </div>
            <div id="pilotWarning">
            </div>
-
                 <table width="100%" 
                        class="table table-striped table-bordered table-hover responsive" 
                        id="rare-disease-main"
@@ -347,20 +348,64 @@ SOFTWARE.
                             <th>Has Germline Variant</th>    
                         </tr>
                     </thead>
-                    </table>
-                </div>
-
-
-            <!-- /.panel-body -->
+                </table>
+            </div>
         </div>
-        <!-- /.panel -->
+
+    <div id="pharmacogenomics" class="tab-pane fade">
+        <div class="container-fluid" >
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            Genomics England Pharmacogenomics DPYD cases
+                        </div>
+                        <div class="panel-body">
+                            <table class="table table-striped table-bordered table-hover" id="dataTables-generic4">
+                                <thead style='font-size: 75%'> 
+                                    <tr>
+                                        <th><i class="fas fa-clipboard-list fa-1x"></i></th>
+                                        <th>GeL ID</th>
+                                        <th>Case ID</th>
+                                        <th>Forename</th>
+                                        <th>Surname</th>
+                                        <th>Updated <a href="#" data-toggle="tooltip" title="When the case was updated by GeL, not locally!"><i class="fas fa-info-circle"></i></a></th>
+                                        <th>Case Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody style='font-size: 75%'>
+                                {% for report in dpyd_reports %}
+                                    <tr>
+                                        <td>
+                                            <a href="/proband/{{report.id }}">
+                                                <i class="fas fa-external-link-alt fa-2x"></i>
+                                            </a>
+                                        </td>
+                                        <td>{{report.ir_family.participant_family.proband.gel_id}}</td>
+                                        <td>{{report.ir_family}}</td>
+                                        <td>{{report.ir_family.participant_family.proband.forename}}</td>
+                                        <td>{{report.ir_family.participant_family.proband.surname}}</td>
+                                        <td>{{report.updated|date}}</td>
+                                        <td>{{report.get_case_status_display}}
+                                    <tr>
+                                {% endfor %}
+                            </table>
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+        </div>
     </div>
-    <!-- /.col-lg-12 -->
 </div>
-</div>
+
+
 
 {% if sample_type %}
 <script charset="utf-8">
+
 // intialise the table at document ready time
 $(document).ready(initaliseTable());
 
@@ -788,6 +833,7 @@ function fetchDataTable(caseType, genomeBuild, maxTier, caseStatus) {
             ],
             "order": [[12, "desc"]]
         });
+
     }
     return table
 }
@@ -802,6 +848,7 @@ function getRadioValue(radioElementName) {
     }
     return checked_radio.value
 }
+
 </script>
 {% endif %}
 {% endblock %}
