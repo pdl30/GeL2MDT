@@ -370,6 +370,8 @@ SOFTWARE.
                                         <th>Forename</th>
                                         <th>Surname</th>
                                         <th>Updated <a href="#" data-toggle="tooltip" title="When the case was updated by GeL, not locally!"><i class="fas fa-info-circle"></i></a></th>
+                                        <th>HGVSc</th>
+                                        <th>HGVSp</th>
                                         <th>Case Status</th>
                                     </tr>
                                 </thead>
@@ -386,6 +388,8 @@ SOFTWARE.
                                         <td>{{report.ir_family.participant_family.proband.forename}}</td>
                                         <td>{{report.ir_family.participant_family.proband.surname}}</td>
                                         <td>{{report.updated|date}}</td>
+                                        <td></td>
+                                        <td></td>
                                         <td>{{report.get_case_status_display}}
                                     <tr>
                                 {% endfor %}
