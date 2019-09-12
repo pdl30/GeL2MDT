@@ -362,7 +362,8 @@ class GELInterpretationReport(models.Model):
         ('RETURN', 'RETURN'),
         ('AUTHREQ', 'AUTHREQ'),
         ('ADDPANEL', 'ADDPANEL'),
-        ('UNCONFIRMED', 'UNCONFIRMED')),)
+        ('UNCONFIRMED', 'UNCONFIRMED'),
+        ('PRESCREEN', 'PRESCREEN')),)
     first_check = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
