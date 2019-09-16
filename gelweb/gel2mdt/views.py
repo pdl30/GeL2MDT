@@ -298,16 +298,16 @@ def cancer_main(request):
         gene = Gene.objects.filter(hgnc_name__icontains='DPYD')
         reports = GELInterpretationReport.objects.latest_cases_by_sample_type(sample_type='cancer')
 
-        dpyd_proband_variants = ProbandVariant.objects.filter(
+        dpyd_pvs = ProbandVariant.objects.filter(
             probandtranscriptvariant__transcript__gene__in=gene,
-            interpretation_report__in=reports
-            ).distinct()
+            interpretation_report__in=reports).distinct()
         
-        dpyd_reports = []
-        for pv in dpyd_proband_variants:
-            dpyd_reports.append(pv.interpretation_report)
-        dpyd_reports = list(set(dpyd_reports))
-        
+        dpyd_reports = {}
+        for pv in dpyd_pvs:
+            report = pv.interpretation_report
+            tv = pv.get_transcript_variant()
+            dpyd_reports.setdefault(report, []).append(tv)
+
         return render(request, 'gel2mdt/cancer_main.html', {'sample_type': 'cancer',
                                                             'gene_search_form': gene_search_form,
                                                             'dpyd_reports': dpyd_reports})
