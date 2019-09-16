@@ -388,7 +388,7 @@ SOFTWARE.
                                 <td>{{report.ir_family}}</td>
                                 <td>{{report.ir_family.participant_family.proband.forename}}</td>
                                 <td>{{report.ir_family.participant_family.proband.surname}}</td>
-                                <td>{{report.updated|date}}</td>
+                                <td>{{report.updated|date:"Y/m/d"}}</td>
                                 <td>
                                 {% for tv in tv_list %}
                                     {{tv.hgvs_c}}
