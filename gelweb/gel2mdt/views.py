@@ -310,7 +310,7 @@ def cancer_main(request):
 
         return render(request, 'gel2mdt/cancer_main.html', {'sample_type': 'cancer',
                                                             'gene_search_form': gene_search_form,
-                                                            'dpyd_reports': dpyd_reports})
+                                                            'dpyd_reports': dpyd_reports})       
     else:
         return redirect('index')
 
