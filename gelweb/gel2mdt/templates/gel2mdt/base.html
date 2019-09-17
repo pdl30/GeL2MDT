@@ -282,7 +282,6 @@ $('#dataTables-psv').DataTable({
     });
     </script>
 
-
      <script>
     $(document).ready(function() {
         $('#dataTables-generic2').DataTable({
@@ -290,6 +289,8 @@ $('#dataTables-psv').DataTable({
         });
     });
     </script>
+
+
      <script>
     $(document).ready(function() {
         $('#dataTables-generic3').DataTable({
@@ -311,6 +312,23 @@ $('#dataTables-psv').DataTable({
         $('#dataTables-recent_mdt').DataTable({
             responsive: true,
             "order": [[ 0, "desc" ]]
+        });
+    });
+    </script>
+
+    <script>
+    $(document).ready(function() {
+        $('#dataTables-pharmacogenomics').DataTable({
+            dom: 'lBfrtip',
+            responsive: true,
+             buttons: [ {
+                extend: 'excelHtml5',
+                title: "PharmacogenomicsCaseExport"
+                },
+                {
+                extend: 'csvHtml5',
+                title: "PharmacogenomicsCaseExport"
+                }],
         });
     });
     </script>

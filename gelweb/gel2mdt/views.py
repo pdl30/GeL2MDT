@@ -293,8 +293,24 @@ def cancer_main(request):
                 can_view_cancer = True
     if can_view_cancer:
         gene_search_form = GeneSearchForm()
+
+        # Pharmacogenomics DPYD reports
+        gene = Gene.objects.filter(hgnc_name__icontains='DPYD')
+        reports = GELInterpretationReport.objects.latest_cases_by_sample_type(sample_type='cancer')
+
+        dpyd_pvs = ProbandVariant.objects.filter(
+            probandtranscriptvariant__transcript__gene__in=gene,
+            interpretation_report__in=reports).distinct()
+        
+        dpyd_reports = {}
+        for pv in dpyd_pvs:
+            report = pv.interpretation_report
+            tv = pv.get_transcript_variant()
+            dpyd_reports.setdefault(report, []).append(tv)
+
         return render(request, 'gel2mdt/cancer_main.html', {'sample_type': 'cancer',
-                                                            'gene_search_form': gene_search_form})
+                                                            'gene_search_form': gene_search_form,
+                                                            'dpyd_reports': dpyd_reports})       
     else:
         return redirect('index')
 
