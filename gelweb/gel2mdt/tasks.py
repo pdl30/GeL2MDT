@@ -601,10 +601,15 @@ class UpdateDemographics(object):
 
         if 'name' in clinician_details and 'hospital' in clinician_details:
             print(clinician_details)
-            clinician, saved = Clinician.objects.get_or_create(
+            clinician = Clinician.objects.filter(
                 name=clinician_details['name'],
-                hospital = clinician_details['hospital']
-            )
+                hospital = clinician_details['hospital']).first() # can return multiple if clinician as upper and lower case
+            
+            if clinician is None:
+                clinician = Clinician.objects.create(
+                    name=clinician_details['name'],
+                    hospital = clinician_details['hospital'])
+
             self.clinician = clinician
             family = self.report.ir_family.participant_family
             family.clinician = clinician
