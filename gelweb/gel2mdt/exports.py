@@ -713,7 +713,8 @@ def write_gtab_template(report):
         f"frequency > 1 % in an internal Genomics England data set(indicates potential unsubtracted "
         f"germline variant) (R) a recurrently identified somatic variant with somatic allele frequency "
         f"> 5 % in an internal Genomics England data set(indicates potential technical artefact) (SR) "
-        f"a variant overlapping simple repeats.\n\n\n\n")
+        f"a variant overlapping simple repeats. Variant flag(s) and/or low ALT allele frequency (<0.1), "
+        f"variant is not scored.\n\n\n\n")
     run.font.size = Pt(8)
 
     run = table.rows[0].cells[0].paragraphs[0].add_run("Domain 0 ")
@@ -752,7 +753,7 @@ def write_gtab_template(report):
                                                          f"Genomic coordinate {proband_variant.variant.genome_assembly}"
                                                          f" ref>ALT allele: {proband_variant.variant.chromosome}:"
                                                          f"{proband_variant.variant.position} "
-                                                         f"{proband_variant.variant.reference}"
+                                                         f"{proband_variant.variant.reference}>"
                                                          f"{proband_variant.variant.alternate}\n"
                                                          f"COSMIC ID and score:\n\n")
             count += 1
@@ -795,7 +796,7 @@ def write_gtab_template(report):
                                                          f"Genomic coordinate {proband_variant.variant.genome_assembly}"
                                                          f"ref>ALT allele: {proband_variant.variant.chromosome}:"
                                                          f"{proband_variant.variant.position} "
-                                                         f"{proband_variant.variant.reference}"
+                                                         f"{proband_variant.variant.reference}>"
                                                          f"{proband_variant.variant.alernate}\n"
                                                          f"COSMIC ID and score:\n\n")
             count += 1
@@ -837,7 +838,7 @@ def write_gtab_template(report):
                                                          f"Genomic coordinate {proband_variant.variant.genome_assembly}"
                                                          f"ref>ALT allele: {proband_variant.variant.chromosome}:"
                                                          f"{proband_variant.variant.position} "
-                                                         f"{proband_variant.variant.reference}"
+                                                         f"{proband_variant.variant.reference}>"
                                                          f"{proband_variant.variant.alernate}\n"
                                                          f"COSMIC ID and score:\n\n")
             count += 1
@@ -905,7 +906,7 @@ def write_gtab_template(report):
                                                          f"Genomic coordinate {proband_variant.variant.genome_assembly}"
                                                          f"ref>ALT allele: {proband_variant.variant.chromosome}:"
                                                          f"{proband_variant.variant.position} "
-                                                         f"{proband_variant.variant.reference}"
+                                                         f"{proband_variant.variant.reference}>"
                                                          f"{proband_variant.variant.alernate}\n"
                                                          f"COSMIC ID and score:\n\n")
             count += 1
@@ -937,7 +938,7 @@ def write_gtab_template(report):
     run.font.size = Pt(8)
     
     run=table.rows[0].cells[0].paragraphs[0].add_run(
-        "All copy number and structural variants involving named genes relevant to the disease type:\n\n\n\n")
+        "Translocations involving 2 or more named genes:\n\n\n\n")
     run.font.size = Pt(10)
 
     # Section. APPENDIX
@@ -992,9 +993,11 @@ def write_gtab_template(report):
         f'6. Somatic variant-level actionability is sourced from the GEL Associated '
         f'Supplementary HTML and/or if relevant to disease type \n')
     run_hyper = table.rows[0].cells[0].paragraphs[0].add_run(
-        f'https://www.mycancergenome.org/\n')
+        f'https://www.mycancergenome.org/.')
     run_hyper.font.color.rgb = RGBColor(0, 0, 153)
     run_hyper.font.underline = True # has a hyperlink look, but not functional yet
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        f' Somatic Domain 1 categorisation is according to PMID: 27993330.\n')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         f'7. Databases referenced include ClinVar, GeneCards, gnomAD, HGMD and OMIM.\n')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
