@@ -360,8 +360,11 @@ SOFTWARE.
     <div id="cancer-pharmacogenomics" class="tab-pane fade">
         <div class="row">
             <div class="col-lg-12">
-                <div class="panel-heading">
-                    Cases with a DPYD variant
+                <div class="panel-heading"> Cases with a DPYD variant. <br>
+                    You can see the following GMCs: 
+                    {% for group in user.groups.all %}
+                        {{group}}
+                    {% endfor %}
                 </div>
                 <div class="panel panel-default">
                     <div class="panel-body">
@@ -376,6 +379,9 @@ SOFTWARE.
                                     <th>Updated <a href="#" data-toggle="tooltip" title="When the case was updated by GeL, not locally!"><i class="fas fa-info-circle"></i></a></th>
                                     <th>HGVSc</th>
                                     <th>HGVSp</th>
+                                    <th>GTAB Discussion</th>
+                                    <th>GTAB Action</th>
+                                    <th>Case Code</th>
                                     <th>Case Status</th>
                                 </tr>
                             </thead>
@@ -402,6 +408,9 @@ SOFTWARE.
                                     {{tv.hgvs_p}}<br>
                                 {% endfor %}
                                 </td>
+                                <td>{{report.ir_family.participant_family.proband.discussion}}</td>
+                                <td>{{report.ir_family.participant_family.proband.action}}</td>
+                                <td>{{report.get_case_code_display}}</td>
                                 <td>{{report.get_case_status_display}}</td>
                                 </tr>
                             {% endfor %}
