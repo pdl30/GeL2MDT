@@ -907,7 +907,7 @@ def write_gtab_template(report):
                                                          f"ref>ALT allele: {proband_variant.variant.chromosome}:"
                                                          f"{proband_variant.variant.position} "
                                                          f"{proband_variant.variant.reference}>"
-                                                         f"{proband_variant.variant.alernate}\n"
+                                                         f"{proband_variant.variant.alternate}\n"
                                                          f"COSMIC ID and score:\n\n")
             count += 1
     
