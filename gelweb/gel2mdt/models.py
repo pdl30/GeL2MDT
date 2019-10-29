@@ -354,7 +354,8 @@ class GELInterpretationReport(models.Model):
     pilot_case = models.BooleanField(default=False)
     no_primary_findings = models.BooleanField(default=False)
     case_code = models.CharField(max_length=20, null=True, blank=True, choices=(
-        ('REANALYSE', 'REANALYSE'), ('URGENT', 'URGENT'),
+        ('REANALYSE', 'REANALYSE'), 
+        ('URGENT', 'URGENT'),
         ('SAMPLE', 'SAMPLE'),
         ('CLINGEN', 'CLINGEN'),
         ('DECEASED', 'DECEASED'),
@@ -363,7 +364,8 @@ class GELInterpretationReport(models.Model):
         ('AUTHREQ', 'AUTHREQ'),
         ('ADDPANEL', 'ADDPANEL'),
         ('UNCONFIRMED', 'UNCONFIRMED'),
-        ('PRESCREEN', 'PRESCREEN')),)
+        ('PRESCREEN', 'PRESCREEN'),
+        ('NPF', 'NPF')),)
     first_check = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
