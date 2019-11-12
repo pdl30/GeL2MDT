@@ -365,7 +365,8 @@ class GELInterpretationReport(models.Model):
         ('ADDPANEL', 'ADDPANEL'),
         ('UNCONFIRMED', 'UNCONFIRMED'),
         ('PRESCREEN', 'PRESCREEN'),
-        ('NPF', 'NPF')),)
+        ('NPF', 'NPF'),
+        ('NFF', 'NFF')),)
     first_check = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
