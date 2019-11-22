@@ -95,17 +95,18 @@ def get_gel_content(ir, ir_version):
     :param user_email: Logged in user email address
     :param ir: Interpretation report ID or CIP id
     :param ir_version: Version of CIP id
-    :return: Beatitful soup version of the report
+    :return: Beautiful soup version of the report
     '''
     # otherwise get uname and password from a file
     interpretation_reponse = PollAPI(
-        "cip_api", f'interpretation-request/{ir}/{ir_version}/')
+        "cip_api", f'interpretation-request/{ir}/{ir_version}/?reports_v6=true')
     interp_json = interpretation_reponse.get_json_response()
+
     analysis_versions = []
     latest = None
-    if 'interpreted_genome' in interp_json:
-        for cip_version in interp_json['interpreted_genome']:
-            analysis_versions.append(cip_version['cip_version'])
+    if 'clinical_report' in interp_json:
+        for clinical_report in interp_json['clinical_report']:
+            analysis_versions.append(clinical_report['clinical_report_version'])
         try:
             latest = max(analysis_versions)
         except ValueError as e:
@@ -113,13 +114,15 @@ def get_gel_content(ir, ir_version):
 
     loop_over_reports = True
     while loop_over_reports:
-        print('latest', latest)
+        print(f"Using clinical report version {latest}")
+        print(f"Using this endpoint: /clinical-report/{ir}/{ir_version}/{latest}")
         html_report = PollAPI(
             "cip_api", f"clinical-report/{ir}/{ir_version}/{latest}"
         )
         gel_content = html_report.get_json_response(content=True)
         try:
             gel_json_content = json.loads(gel_content)
+            
             if gel_json_content['detail'].startswith('Not found') or gel_json_content['detail'].startswith(
                     'Method \"GET\" not allowed'):
                 if latest == 1:
