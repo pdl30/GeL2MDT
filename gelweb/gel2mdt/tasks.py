@@ -381,10 +381,16 @@ def case_alert_email():
                     pass
     if sample_types['cancer'] or sample_types['raredisease']:
         text_content = "A Case Alert has been triggered, please visit GEL2MDT to check and remove this alert!"
-        subject, from_email, to = f'GeL2MDT CaseAlert', 'root@localhost.e.amses.net', 'GELTeam@gosh.nhs.uk'
-        msg = EmailMessage(subject, text_content, from_email, [to])
         try:
-            msg.send()
+            if sample_types['raredisease']:
+                subject, from_email, to = f'GeL2MDT RD CaseAlert', 'root@localhost.e.amses.net', ['GELTeam@gosh.nhs.uk']
+                msg = EmailMessage(subject, text_content, from_email, to)
+                msg.send()
+            if sample_types['cancer']:
+                subject, from_email, to = f'GeL2MDT Cancer CaseAlert', 'root@localhost.e.amses.net', ['Laura.King3@gosh.nhs.uk',
+                                                                                                      'Shazia.Mahamdallie@gosh.nhs.uk']
+                msg = EmailMessage(subject, text_content, from_email, to)
+                msg.send()
         except Exception as e:
             pass
 
