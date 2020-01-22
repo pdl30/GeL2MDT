@@ -1637,10 +1637,10 @@ def report(request, report_id, outcome):
             f.getvalue(),
             content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
-
         filename = '{}_{}_{}.docx'.format(report.ir_family.participant_family.proband.surname,
-                                            report.ir_family.participant_family.proband.forename,
+                                            report.ir_family.participant_family.proband.forename.replace(", ", "_"),
                                             report.ir_family.ir_family_id,)
+
         response['Content-Disposition'] = 'attachment; filename=' + filename
         response['Content-Length'] = length
         return response
