@@ -1,3 +1,12 @@
+## [0.7.2] - 2020-01-29
+### Changed
+- Separate DPYD pharmacogenomics case tracking view
+- More case codes
+
+### Changed
+- Show only PanelApp green genes in Gel Report Annex
+- Bug fix for CNVs/STRs for pulling variants
+
 ## [0.7.1] - 2019-05-15
 ### Changed
 - Removed CNV and STR columns for cancer MDTs
