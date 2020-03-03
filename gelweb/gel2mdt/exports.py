@@ -1051,10 +1051,16 @@ def write_npf_template(report):
     :param report: GELInterpretation instance
     :return: docx document to be exported
     '''
-    print("Report:", report)
+    print(f'Report: {report}, GMC: {report.ir_family.participant_family.proband.gmc}')
+
+    ion_gmc_ids = ['rrv', 'nhnn']
+
+    # Template with headers, page number and custom Grid Table Plain setup
+    if report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids:
+        template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='npf_glh_ion_negative_report_template.docx'))
+    else:
+        template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='npf_glh_negative_report_template.docx'))
     
-    # template with headers, page number and custom Grid Table Plain setup
-    template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='npf_glh_negative_report_template.docx'))
     document = Document(docx=template_file)
 
     sections = document.sections
@@ -1181,7 +1187,11 @@ def write_npf_template(report):
     run = paragraph.add_run(
         f'Authorised by:\n\n\n')
 
-    run = paragraph.add_run(
+    if report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids:
+        run = paragraph.add_run(
+        f'Email: ucl-tr.NHNNgenetics@nhs.net\n')
+    else:
+        run = paragraph.add_run(
         f'Email: GEL.Team@gosh.nhs.uk\n')
 
     paragraph = document.add_paragraph()
