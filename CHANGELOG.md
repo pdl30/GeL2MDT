@@ -1,6 +1,7 @@
-## [0.8.0]- 2020-02-24
+## [0.8.0]- 2020-03-05
 ### Added
-- Updates to API to use the Gel CIPAPI version 2.8.0 using the cipapi-gms-beta endpoint.
+- Updates to API to use the Gel CIPAPI version 2.8.0 using the cipapi-gms-beta endpoint
+- NPF export for IoN GMC cases uses specific template
 
 ## [0.7.2]- 2020-01-29
 ### Added
