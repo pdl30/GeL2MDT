@@ -1,3 +1,30 @@
+## [0.8.0]- 2020-03-05
+### Added
+- Updates to API to use the Gel CIPAPI version 2.8.0 using the cipapi-gms-beta endpoint
+- NPF export for IoN GMC cases uses specific template
+
+## [0.7.2]- 2020-01-29
+### Added
+- More case codes
+- Separate DPYD pharmacogenomics case tracking view
+
+### Changed
+- Do not show maternal/paternal CNV copies
+- Bug fix for CNVs/STRs for pulling variants
+- Show only PanelApp green genes in Gel Report Annex
+
+## [0.7.1]- 2019-05-09
+### Added
+- Reformatted GTAB template format.
+- Base GTAB docx now loaded from file.
+- New case code.
+
+### Changed
+- UI change to MDT proband table, allowing compact view option, and navigation.
+- Minor shuffle of MDM export.
+- Bugfix associated samples table.
+- Associated tables additional column and new export functions.
+
 ## [0.7.0]- 2019-04-12
 ### Added
 - CNV and STR compatibility
