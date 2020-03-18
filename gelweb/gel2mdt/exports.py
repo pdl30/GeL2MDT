@@ -1107,6 +1107,15 @@ def write_npf_template(report):
     table = document.add_table(rows=5, cols=2, style='Grid Table Plain')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         f'Dr {clincian}')
+    if report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids:
+        run = table.rows[1].cells[0].paragraphs[0].add_run(
+            f'NHNN')
+        run = table.rows[2].cells[0].paragraphs[0].add_run(
+            f'Queen Square')
+        run = table.rows[3].cells[0].paragraphs[0].add_run(
+            f'London')
+        run = table.rows[4].cells[0].paragraphs[0].add_run(
+            f'EC1N 3BG')
     run = table.rows[0].cells[1].paragraphs[0].add_run(
         f'Patient Name:\t\t  ')
     run.bold = True
