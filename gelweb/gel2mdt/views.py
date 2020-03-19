@@ -1605,7 +1605,8 @@ def report(request, report_id, outcome):
 
     report = GELInterpretationReport.objects.get(id=report_id)
     genome_build = report.assembly
-    panels = InterpretationReportFamilyPanel.objects.filter(ir_family=report.ir_family)
+    panels = InterpretationReportFamilyPanel.objects.filter(
+        ir_family=report.ir_family)
 
     panel_genes = {}
     for panel in panels:
@@ -1613,7 +1614,7 @@ def report(request, report_id, outcome):
         if os.path.isfile(panelapp_file):
             panelapp_json = json.load(open(panelapp_file))
             green_genes = [gene for gene in panelapp_json['result']['Genes']
-                         if gene['LevelOfConfidence'] == "HighEvidence"]
+                           if gene['LevelOfConfidence'] == "HighEvidence"]
             panel_genes[panel] = len(green_genes)
         else:
             panel_genes[panel] = ''
@@ -1627,7 +1628,8 @@ def report(request, report_id, outcome):
         reported_variants = None
 
     try:
-        document = write_npf_template(report)
+        ion_gmc_ids = ['rrv', 'nhnn']
+        document = write_npf_template(report, ion_gmc_ids)
         f = BytesIO()
         document.save(f)
         length = f.tell()
@@ -1637,9 +1639,15 @@ def report(request, report_id, outcome):
             f.getvalue(),
             content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         )
-        filename = '{}_{}_{}.docx'.format(report.ir_family.participant_family.proband.surname,
-                                            report.ir_family.participant_family.proband.forename.replace(", ", "_"),
-                                            report.ir_family.ir_family_id,)
+        if report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids:
+            filename = '{}_{}_NHNNLabReport_{}_GEL.docx'.format(report.ir_family.ir_family_id,
+                                                                report.ir_family.participant_family.proband.gel_id,
+                                                                date.today(),)
+        else:
+            filename = '{}_{}_{}.docx'.format(report.ir_family.participant_family.proband.surname,
+                                              report.ir_family.participant_family.proband.forename.replace(
+                                                  ", ", "_"),
+                                              report.ir_family.ir_family_id,)
 
         response['Content-Disposition'] = 'attachment; filename=' + filename
         response['Content-Length'] = length

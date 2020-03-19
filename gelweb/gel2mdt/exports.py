@@ -1045,15 +1045,13 @@ def add_hyperlink_into_run(paragraph, run, url):
     paragraph._p.insert(i+1,hyperlink)
 
 
-def write_npf_template(report):
+def write_npf_template(report, ion_gmc_ids):
     '''
     Given a report, write a No Primary Findings (NPF) report
     :param report: GELInterpretation instance
     :return: docx document to be exported
     '''
     print(f'Report: {report}, GMC: {report.ir_family.participant_family.proband.gmc}')
-
-    ion_gmc_ids = ['rrv', 'nhnn']
 
     # Template with headers, page number and custom Grid Table Plain setup
     if report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids:
@@ -1107,6 +1105,15 @@ def write_npf_template(report):
     table = document.add_table(rows=5, cols=2, style='Grid Table Plain')
     run = table.rows[0].cells[0].paragraphs[0].add_run(
         f'Dr {clincian}')
+    if report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids:
+        run = table.rows[1].cells[0].paragraphs[0].add_run(
+            f'NHNN')
+        run = table.rows[2].cells[0].paragraphs[0].add_run(
+            f'Queen Square')
+        run = table.rows[3].cells[0].paragraphs[0].add_run(
+            f'London')
+        run = table.rows[4].cells[0].paragraphs[0].add_run(
+            f'EC1N 3BG')
     run = table.rows[0].cells[1].paragraphs[0].add_run(
         f'Patient Name:\t\t  ')
     run.bold = True
