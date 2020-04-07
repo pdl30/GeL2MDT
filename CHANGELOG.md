@@ -1,3 +1,8 @@
+## [0.8.1]- 2020-04-07
+### Added
+- Change to Gel CIPAPI beta or production urls based on config
+- Refresh expired tokens
+
 ## [0.8.0]- 2020-03-05
 ### Added
 - Updates to API to use the Gel CIPAPI version 2.8.0 using the cipapi-gms-beta endpoint
