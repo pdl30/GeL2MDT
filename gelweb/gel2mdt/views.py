@@ -1629,7 +1629,13 @@ def report(request, report_id, outcome):
 
     try:
         ion_gmc_ids = ['rrv', 'nhnn']
-        document = write_npf_template(report, ion_gmc_ids)
+        ion_exception_list = [
+            's sisodiya', 'simona balestrini', 
+            's eriksson', 's o\'sullivan',
+            'meneka sidhu', 'maneka sidhu',
+            'm sidu', 'f rugg-gunn'
+            ]
+        document = write_npf_template(report, ion_gmc_ids, ion_exception_list)
         f = BytesIO()
         document.save(f)
         length = f.tell()
