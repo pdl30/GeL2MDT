@@ -1045,20 +1045,26 @@ def add_hyperlink_into_run(paragraph, run, url):
     paragraph._p.insert(i+1,hyperlink)
 
 
-def write_npf_template(report, ion_gmc_ids):
+def write_npf_template(report, ion_gmc_ids, ion_exception_list):
     '''
     Given a report, write a No Primary Findings (NPF) report
     :param report: GELInterpretation instance
     :return: docx document to be exported
     '''
-    print(f'Report: {report}, GMC: {report.ir_family.participant_family.proband.gmc}')
+    print(
+        f'Report: {report}, GMC: {report.ir_family.participant_family.proband.gmc} ' 
+        f'Clinician: {report.ir_family.participant_family.clinician.name.lower()}')
 
     # Template with headers, page number and custom Grid Table Plain setup
-    if report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids:
-        template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='npf_glh_ion_negative_report_template.docx'))
+    if (report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids and
+            report.ir_family.participant_family.clinician.name.lower() not in ion_exception_list):
+        template_file = os.path.join(os.getcwd(
+        ), "gel2mdt/exports_templates/{filename}".format(
+            filename='npf_glh_ion_negative_report_template.docx'))
     else:
-        template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(filename='npf_glh_negative_report_template.docx'))
-    
+        template_file = os.path.join(os.getcwd(
+        ), "gel2mdt/exports_templates/{filename}".format(filename='npf_glh_negative_report_template.docx'))
+
     document = Document(docx=template_file)
 
     sections = document.sections
