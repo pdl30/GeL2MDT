@@ -368,7 +368,8 @@ class GELInterpretationReport(models.Model):
         ('PRESCREEN', 'PRESCREEN'),
         ('NOFURTHER', 'NOFURTHER'),
         ('NOTIER3', 'NOTIER3'),
-        ('MEHREQUEST', 'MEHREQUEST')),)
+        ('MEHREQUEST', 'MEHREQUEST'),
+        ('DIAGNOSTIC_DISCOVERY', 'DIAGNOSTIC_DISCOVERY')),)
     first_check = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
