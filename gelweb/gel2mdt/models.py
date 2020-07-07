@@ -369,7 +369,9 @@ class GELInterpretationReport(models.Model):
         ('NOFURTHER', 'NOFURTHER'),
         ('NOTIER3', 'NOTIER3'),
         ('MEHREQUEST', 'MEHREQUEST'),
-        ('DIAGNOSTIC_DISCOVERY', 'DIAGNOSTIC_DISCOVERY')),)
+        ('DIAGNOSTIC_DISCOVERY', 'DIAGNOSTIC_DISCOVERY'),
+        ('AWAITING_QPCR', 'AWAITING_QPCR'),
+        ('AWAITING_CLINICIAN', 'AWAITING_CLINICIAN')),)
     first_check = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
