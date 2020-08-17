@@ -1119,7 +1119,7 @@ def write_npf_template(report, ion_gmc_ids, ion_exception_list):
         run = table.rows[3].cells[0].paragraphs[0].add_run(
             f'London')
         run = table.rows[4].cells[0].paragraphs[0].add_run(
-            f'EC1N 3BG')
+            f'WC1N 3BG')
     run = table.rows[0].cells[1].paragraphs[0].add_run(
         f'Patient Name:\t\t  ')
     run.bold = True
