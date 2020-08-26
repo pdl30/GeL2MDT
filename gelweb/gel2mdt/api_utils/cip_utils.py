@@ -47,7 +47,7 @@ class InterpretationList(object):
         while not last_page:
             request_list_poll = PollAPI(
                 "cip_api",
-                "interpretation-request?page={page}".format(page=page)
+                "interpretation-request?category=100k&page={page}".format(page=page)
             )
             request_list_poll.get_json_response()
             request_list_results = request_list_poll.response_json["results"]
