@@ -1055,12 +1055,23 @@ def write_npf_template(report, ion_gmc_ids, ion_exception_list):
         f'Report: {report}, GMC: {report.ir_family.participant_family.proband.gmc} ' 
         f'Clinician: {report.ir_family.participant_family.clinician.name.lower()}')
 
+
+    if (report.ir_family.participant_family.clinician.name.lower() in ['s sisodiya', 'sanjay sisodiya'] and
+            report.case_status == 'E'):
+        sisodiya_research_case = True
+    else:
+        sisodiya_research_case = False
+
     # Template with headers, page number and custom Grid Table Plain setup
     if (report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids and
             report.ir_family.participant_family.clinician.name.lower() not in ion_exception_list):
         template_file = os.path.join(os.getcwd(
         ), "gel2mdt/exports_templates/{filename}".format(
             filename='npf_glh_ion_negative_report_template.docx'))
+    elif sisodiya_research_case:
+        template_file = os.path.join(os.getcwd(
+        ), "gel2mdt/exports_templates/{filename}".format(
+            filename='npf_glh_sisodiya_negative_report_template.docx'))
     else:
         template_file = os.path.join(os.getcwd(
         ), "gel2mdt/exports_templates/{filename}".format(filename='npf_glh_negative_report_template.docx'))
@@ -1109,9 +1120,22 @@ def write_npf_template(report, ion_gmc_ids, ion_exception_list):
         sample_type = 'cancer'
     
     table = document.add_table(rows=5, cols=2, style='Grid Table Plain')
-    run = table.rows[0].cells[0].paragraphs[0].add_run(
-        f'Dr {clincian}')
-    if report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids:
+    if sisodiya_research_case:
+        run = table.rows[0].cells[0].paragraphs[0].add_run(
+            f'Prof {clincian}')
+    else:
+        run = table.rows[0].cells[0].paragraphs[0].add_run(
+            f'Dr {clincian}')
+    if sisodiya_research_case:
+        run = table.rows[1].cells[0].paragraphs[0].add_run(
+            f'The Chalfont Centre for Epilepsy')
+        run = table.rows[2].cells[0].paragraphs[0].add_run(
+            f'Epilepsy Society, Chesham Lane')
+        run = table.rows[3].cells[0].paragraphs[0].add_run(
+            f'Chalfont St Peter')
+        run = table.rows[4].cells[0].paragraphs[0].add_run(
+            f'Buckinghamshire, SL9 0RJ')
+    elif report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids:
         run = table.rows[1].cells[0].paragraphs[0].add_run(
             f'NHNN')
         run = table.rows[2].cells[0].paragraphs[0].add_run(
@@ -1165,19 +1189,35 @@ def write_npf_template(report, ion_gmc_ids, ion_exception_list):
     else:
         clincian_surname = clincian 
     
-    run = paragraph.add_run(
-        f'Dear Dr {clincian_surname},')
-
-    paragraph = document.add_paragraph()
-    run = paragraph.add_run(
-        f'The above named participant (and their family where applicable) are participating in the 100,000 Genomes  '
-        f'Project to find the cause of {report.ir_family.participant_family.proband.forename}\'s {sample_type}. ')
-    run = paragraph.add_run(
-        f'Whole genome sequencing* has been completed by Genomics England and the primary analysis has not '
-        f'identified any underlying genetic cause for {gender_pronoun} clinical presentation. ').bold = True
-    run = paragraph.add_run(
-        f'Please refer to the attached Genomics England report for information on the genes included in the primary '
-        f'analysis. If panels appropriate to the phenotype have not been applied please contact the laboratory.')
+    if sisodiya_research_case:
+        run = paragraph.add_run(
+            f'Dear Professor {clincian_surname},')
+        paragraph = document.add_paragraph()
+        run = paragraph.add_run(
+            f'The above named participant (and their family where applicable) are participating in the 100,000 Genomes  '
+            f'Project to find the cause of {report.ir_family.participant_family.proband.forename}\'s {sample_type}. ')
+        run = paragraph.add_run(
+            f'Whole genome sequencing* has been completed by Genomics England and the primary analysis has not '
+            f'identified any underlying genetic cause for {gender_pronoun} clinical presentation. ').bold = True
+        run = paragraph.add_run(
+            f'The sample submitted for whole genome sequencing was obtained on a research basis and we have assumed '
+            f'correct sample identity.').bold = True
+        run = document.add_paragraph(
+            f'Please refer to the attached Genomics England report for information on the genes included in the primary '
+            f'analysis. If panels appropriate to the phenotype have not been applied please contact the laboratory.')
+    else:
+        run = paragraph.add_run(
+            f'Dear Dr {clincian_surname},')
+        paragraph = document.add_paragraph()
+        run = paragraph.add_run(
+            f'The above named participant (and their family where applicable) are participating in the 100,000 Genomes  '
+            f'Project to find the cause of {report.ir_family.participant_family.proband.forename}\'s {sample_type}. ')
+        run = paragraph.add_run(
+            f'Whole genome sequencing* has been completed by Genomics England and the primary analysis has not '
+            f'identified any underlying genetic cause for {gender_pronoun} clinical presentation. ').bold = True
+        run = paragraph.add_run(
+            f'Please refer to the attached Genomics England report for information on the genes included in the primary '
+            f'analysis. If panels appropriate to the phenotype have not been applied please contact the laboratory.')
 
     paragraph = document.add_paragraph(
         f'The genome sequencing data will be stored. Cases with new HPO terms, changing clinical need and those not '
@@ -1199,8 +1239,8 @@ def write_npf_template(report, ion_gmc_ids, ion_exception_list):
     paragraph = document.add_paragraph()
     run = paragraph.add_run(
         f'Authorised by:\n\n\n')
-
-    if report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids:
+    
+    if report.ir_family.participant_family.proband.gmc.lower() in ion_gmc_ids and not sisodiya_research_case:
         run = paragraph.add_run(
         f'Email: ucl-tr.NHNNgenetics@nhs.net\n')
     else:
