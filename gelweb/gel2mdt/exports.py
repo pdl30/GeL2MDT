@@ -72,7 +72,7 @@ def write_report_outcome_template(report):
     run.font.size = Pt(16)
     run.underline = True
     run.bold = True
-    table = document.add_table(rows=13, cols=2, style='Table Grid')
+    table = document.add_table(rows=22, cols=2, style='Table Grid')
     heading_cells = table.columns[0].cells
     heading_cells[0].paragraphs[0].add_run('Patient Name').bold = True
     heading_cells[1].paragraphs[0].add_run('Date of Birth').bold = True
@@ -87,10 +87,18 @@ def write_report_outcome_template(report):
     heading_cells[10].paragraphs[0].add_run('Proband ID').bold = True
     heading_cells[11].paragraphs[0].add_run('Genome Build').bold = True
     heading_cells[12].paragraphs[0].add_run('Panels Applied').bold = True
+    heading_cells[13].paragraphs[0].add_run('Case Status').bold = True
+    heading_cells[14].paragraphs[0].add_run('MDT Status').bold = True
+    heading_cells[15].paragraphs[0].add_run('CIP-API Status').bold = True
+    heading_cells[16].paragraphs[0].add_run('Case Sent').bold = True
+    heading_cells[17].paragraphs[0].add_run('Pilot Case').bold = True
+    heading_cells[18].paragraphs[0].add_run('No Primary Findings').bold = True
+    heading_cells[19].paragraphs[0].add_run('Case Code').bold = True
+    heading_cells[20].paragraphs[0].add_run('Case first checker').bold = True
+    heading_cells[21].paragraphs[0].add_run('Case second checker').bold = True
     value_cells = table.columns[1].cells
     value_cells[0].paragraphs[0].add_run((str(report.ir_family.participant_family.proband.forename) +
-                  ' '  +
-                   str(report.ir_family.participant_family.proband.surname)))
+                  ' ' + str(report.ir_family.participant_family.proband.surname)))
     value_cells[1].paragraphs[0].add_run(str(report.ir_family.participant_family.proband.date_of_birth.date()))
     value_cells[2].paragraphs[0].add_run(report.ir_family.participant_family.proband.nhs_number)
     value_cells[3].paragraphs[0].add_run(report.ir_family.participant_family.proband.sex)
@@ -106,7 +114,19 @@ def write_report_outcome_template(report):
     panels = InterpretationReportFamilyPanel.objects.filter(ir_family=report.ir_family)
     panels = [str(panel.panel) for panel in panels]
     value_cells[12].paragraphs[0].add_run(';'.join((panels)))
-
+    value_cells[13].paragraphs[0].add_run(report.get_case_status_display())
+    value_cells[14].paragraphs[0].add_run(report.get_mdt_status_display())
+    value_cells[15].paragraphs[0].add_run(report.status)
+    value_cells[16].paragraphs[0].add_run(str(report.case_sent))
+    value_cells[17].paragraphs[0].add_run(str(report.pilot_case))
+    value_cells[18].paragraphs[0].add_run(str(report.no_primary_findings))
+    value_cells[19].paragraphs[0].add_run(report.case_code)
+    if report.first_check:
+        value_cells[20].paragraphs[0].add_run('{} {}'.format(report.first_check.first_name,
+                                                            report.first_check.last_name))
+    if report.second_check:
+        value_cells[21].paragraphs[0].add_run('{} {}'.format(report.second_check.first_name,
+                                                            report.check_check.last_name))
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run('Proband Information:\n')
@@ -124,37 +144,6 @@ def write_report_outcome_template(report):
     value_cells[1].paragraphs[0].add_run(report.ir_family.participant_family.proband.outcome.rstrip())
     value_cells[2].paragraphs[0].add_run(report.ir_family.participant_family.proband.action.rstrip())
     value_cells[3].paragraphs[0].add_run(report.ir_family.participant_family.proband.discussion.rstrip())
-
-    paragraph = document.add_paragraph()
-    run = paragraph.add_run('Case Metadata:\n')
-    run.font.size = Pt(16)
-    run.underline = True
-    run.bold = True
-    table = document.add_table(rows=9, cols=2, style='Table Grid')
-    heading_cells = table.columns[0].cells
-    heading_cells[0].paragraphs[0].add_run('Case Status').bold = True
-    heading_cells[1].paragraphs[0].add_run('MDT Status').bold = True
-    heading_cells[2].paragraphs[0].add_run('CIP-API Status').bold = True
-    heading_cells[3].paragraphs[0].add_run('Case Sent').bold = True
-    heading_cells[4].paragraphs[0].add_run('Pilot Case').bold = True
-    heading_cells[5].paragraphs[0].add_run('No Primary Findings').bold = True
-    heading_cells[6].paragraphs[0].add_run('Case Code').bold = True
-    heading_cells[7].paragraphs[0].add_run('Case first checker').bold = True
-    heading_cells[8].paragraphs[0].add_run('Case second checker').bold = True
-    value_cells = table.columns[1].cells
-    value_cells[0].paragraphs[0].add_run(report.get_case_status_display())
-    value_cells[1].paragraphs[0].add_run(report.get_mdt_status_display())
-    value_cells[2].paragraphs[0].add_run(report.status)
-    value_cells[3].paragraphs[0].add_run(str(report.case_sent))
-    value_cells[4].paragraphs[0].add_run(str(report.pilot_case))
-    value_cells[5].paragraphs[0].add_run(str(report.no_primary_findings))
-    value_cells[6].paragraphs[0].add_run(report.case_code)
-    if report.first_check:
-        value_cells[7].paragraphs[0].add_run('{} {}'.format(report.first_check.first_name,
-                                                            report.first_check.last_name))
-    if report.second_check:
-        value_cells[8].paragraphs[0].add_run('{} {}'.format(report.second_check.first_name,
-                                                            report.check_check.last_name))
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run('Case Comments:\n')
@@ -176,12 +165,56 @@ def write_report_outcome_template(report):
         row += 1
 
     paragraph = document.add_paragraph()
+    run = paragraph.add_run('MDT History:\n')
+    run.font.size = Pt(16)
+    run.underline = True
+    run.bold = True
+    paragraph.add_run('This section contains a table per MDT, ordered by the most recent first')
+
+    mdt_linkage_list = MDTReport.objects.filter(interpretation_report=report).values('MDT')
+    mdts = MDT.objects.filter(id__in=mdt_linkage_list).order_by('-date_of_mdt')
+
+    if mdts:
+        for mdt in mdts:
+            clinicians = Clinician.objects.filter(mdt=mdt.id).values_list('name', flat=True)
+            clinical_scientists = ClinicalScientist.objects.filter(mdt=mdt.id).values_list('name', flat=True)
+            other_staff = OtherStaff.objects.filter(mdt=mdt.id).values_list('name', flat=True)
+            attendees = list(clinicians) + list(clinical_scientists) + list(other_staff)
+
+            paragraph = document.add_paragraph()
+            paragraph.add_run()
+            table = document.add_table(rows=6, cols=2, style='Table Grid')
+            heading_cells = table.columns[0].cells
+            heading_cells[0].paragraphs[0].add_run('MDT Date').bold = True
+            heading_cells[1].paragraphs[0].add_run('Status').bold = True
+            heading_cells[2].paragraphs[0].add_run('Creator').bold = True
+            heading_cells[3].paragraphs[0].add_run('Description').bold = True
+            heading_cells[4].paragraphs[0].add_run('Attendees').bold = True
+            heading_cells[5].paragraphs[0].add_run('Sent to Clinician').bold = True
+
+            value_cells = table.columns[1].cells
+            value_cells[0].paragraphs[0].add_run(mdt.date_of_mdt.strftime("%d/%m/%Y"))
+            value_cells[1].paragraphs[0].add_run(mdt.get_status_display())
+            value_cells[2].paragraphs[0].add_run('{} {}'.format(mdt.creator.first_name,
+                                                                mdt.creator.last_name))
+            value_cells[3].paragraphs[0].add_run(mdt.description)
+            value_cells[4].paragraphs[0].add_run(', '.join(attendees))
+            value_cells[5].paragraphs[0].add_run(str(mdt.sent_to_clinician))
+    else:
+        run = paragraph.add_run('No MDT History available\n')
+        run.font.size = Pt(13)
+
+    paragraph = document.add_paragraph()
     run = paragraph.add_run('SNVs/Indels:\n')
     run.font.size = Pt(16)
     run.underline = True
     run.bold = True
     proband_variants = list(ProbandVariant.objects.filter(interpretation_report=report))
-
+    if proband_variants:
+        paragraph.add_run('This section contains a table per variant\n')
+    else:
+        run = paragraph.add_run('No SNVs/Indels called\n')
+        run.font.size = Pt(13)
     if proband_variants:
         for proband_variant in proband_variants:
             transcript = proband_variant.get_transcript()
@@ -227,10 +260,6 @@ def write_report_outcome_template(report):
             value_cells[13].paragraphs[0].add_run(str(rdr.add_surveillance_for_relatives))
             value_cells[14].paragraphs[0].add_run(str(rdr.clinical_trial))
             value_cells[15].paragraphs[0].add_run(str(rdr.inform_reproductive_choice))
-            paragraph.add_run()
-    else:
-        run = paragraph.add_run('No SNVs/Indels called\n')
-        run.font.size = Pt(13)
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run('CNVs:\n')
@@ -238,7 +267,11 @@ def write_report_outcome_template(report):
     run.underline = True
     run.bold = True
     proband_svs = list(ProbandSV.objects.filter(interpretation_report=report))
-
+    if proband_svs:
+        paragraph.add_run('This section contains a table per CNV\n')
+    else:
+        run = paragraph.add_run('No CNVs called\n')
+        run.font.size = Pt(13)
     if proband_svs:
         for proband_sv in proband_svs:
 
@@ -273,10 +306,6 @@ def write_report_outcome_template(report):
             value_cells[9].paragraphs[0].add_run(str(rdr.add_surveillance_for_relatives))
             value_cells[10].paragraphs[0].add_run(str(rdr.clinical_trial))
             value_cells[11].paragraphs[0].add_run(str(rdr.inform_reproductive_choice))
-            paragraph.add_run()
-    else:
-        run = paragraph.add_run('No CNVs called\n')
-        run.font.size = Pt(13)
 
     paragraph = document.add_paragraph()
     run = paragraph.add_run('STRs:\n')
@@ -284,6 +313,11 @@ def write_report_outcome_template(report):
     run.underline = True
     run.bold = True
     proband_strs = list(ProbandSTR.objects.filter(interpretation_report=report))
+    if proband_strs:
+        paragraph.add_run('This section contains a table per STR\n')
+    else:
+        run = paragraph.add_run('No STRs called\n')
+        run.font.size = Pt(13)
 
     if proband_strs:
         for proband_str in proband_svs:
@@ -316,48 +350,7 @@ def write_report_outcome_template(report):
             value_cells[8].paragraphs[0].add_run(str(rdr.add_surveillance_for_relatives))
             value_cells[9].paragraphs[0].add_run(str(rdr.clinical_trial))
             value_cells[10].paragraphs[0].add_run(str(rdr.inform_reproductive_choice))
-    else:
-        run = paragraph.add_run('No STRs called\n')
-        run.font.size = Pt(13)
 
-    paragraph = document.add_paragraph()
-    run = paragraph.add_run('MDT History:\n')
-    run.font.size = Pt(16)
-    run.underline = True
-    run.bold = True
-
-    mdt_linkage_list = MDTReport.objects.filter(interpretation_report=report).values('MDT')
-    mdts = MDT.objects.filter(id__in=mdt_linkage_list).order_by('-date_of_mdt')
-
-    if mdts:
-        for mdt in mdts:
-            clinicians = Clinician.objects.filter(mdt=mdt.id).values_list('name', flat=True)
-            clinical_scientists = ClinicalScientist.objects.filter(mdt=mdt.id).values_list('name', flat=True)
-            other_staff = OtherStaff.objects.filter(mdt=mdt.id).values_list('name', flat=True)
-            attendees = list(clinicians) + list(clinical_scientists) + list(other_staff)
-
-            paragraph = document.add_paragraph()
-            paragraph.add_run()
-            table = document.add_table(rows=6, cols=2, style='Table Grid')
-            heading_cells = table.columns[0].cells
-            heading_cells[0].paragraphs[0].add_run('MDT Date').bold = True
-            heading_cells[1].paragraphs[0].add_run('Status').bold = True
-            heading_cells[2].paragraphs[0].add_run('Creator').bold = True
-            heading_cells[3].paragraphs[0].add_run('Description').bold = True
-            heading_cells[4].paragraphs[0].add_run('Attendees').bold = True
-            heading_cells[5].paragraphs[0].add_run('Sent to Clinician').bold = True
-
-            value_cells = table.columns[1].cells
-            value_cells[0].paragraphs[0].add_run(mdt.date_of_mdt.strftime("%d/%m/%Y"))
-            value_cells[1].paragraphs[0].add_run(mdt.get_status_display())
-            value_cells[2].paragraphs[0].add_run('{} {}'.format(mdt.creator.first_name,
-                                                                mdt.creator.last_name))
-            value_cells[3].paragraphs[0].add_run(mdt.description)
-            value_cells[4].paragraphs[0].add_run(', '.join(attendees))
-            value_cells[5].paragraphs[0].add_run(str(mdt.sent_to_clinician))
-    else:
-        run = paragraph.add_run('No MDT History available\n')
-        run.font.size = Pt(13)
     return document
 
 
