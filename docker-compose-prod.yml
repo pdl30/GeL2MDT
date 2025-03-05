@@ -88,3 +88,18 @@ services:
       - redis
       - celery
       - celery-beat
+  jupyter:
+    image: gel2mdt_jupyter:0.8.1
+    build: .
+    restart: always
+    command: bash -c ". /root/gel2mdt/Docker/startup_script.sh && jupyter notebook --generate-config -y && cd /root/gel2mdt/gelweb && python manage.py shell_plus --notebook"
+    volumes:
+      - .:/root/gel2mdt/
+      - /var/app/gel2mdt_resources:/root/gel2mdt_cache
+    env_file:
+      - /etc/gel2mdt/credentials
+    ports:
+      - "8891:8888"
+    depends_on:
+      - db
+      - web
