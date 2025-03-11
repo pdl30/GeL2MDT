@@ -1,4 +1,4 @@
-version: '3'
+name: 'gel2mdt-north-thames-test'
 
 services:
   web:
@@ -30,12 +30,11 @@ services:
     volumes:
       - /home/genseqservadmin/NT_GEL2MDT/gel2mdt_resources/gel2mdt_db:/var/lib/mysql
 #  jupyter:
-#    image: gel2mdt_jupyter
-#    build: .
+#    image: gel2mdt_jupyter:0.8.1
 #    restart: always
 #    build:
 #      context: .
-#    command: bash -c ". /root/gel2mdt/Docker/startup_script.sh && jupyter notebook --generate-config -y && cd /root/gel2mdt/gelweb && python manage.py shell_plus --notebook"
+#    command: bash -c ". /root/gel2mdt/Docker/startup_script.sh && echo 'yes' | jupyter-lab --generate-config -y && cd /root/gel2mdt/gelweb && python manage.py shell_plus --notebook"
 #    volumes:
 #      - .:/root/gel2mdt/
 #      - /var/app/gel2mdt_resources:/root/gel2mdt_cache
