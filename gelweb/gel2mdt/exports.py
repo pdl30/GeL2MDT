@@ -32,6 +32,328 @@ from docx.shared import Pt, Inches, RGBColor, Cm
 from datetime import datetime
 
 
+def write_report_outcome_template(report):
+    """
+    :param pk: GEL Interpretationreport instance
+    :return: Writes a docx template file for summarising proband MDT outcomes
+    """
+    # document = Document()
+    # footers template, page number setup
+    report_template_file = os.path.join(os.getcwd(), "gel2mdt/exports_templates/{filename}".format(
+        filename='report_outcome_template.docx'))
+    document = Document(docx=report_template_file)
+
+    document.add_picture(os.path.join(settings.STATIC_DIR, 'nhs_image.png'),
+                         height=Inches(1.0))  # image scaled on width axis
+    header_image = document.paragraphs[-1]
+    header_image.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+
+    style = document.styles['Normal']
+    font = style.font
+    font.name = 'Cambria'
+    font.size = Pt(11)
+
+    document.add_heading('GEL2MDT record', 0)
+    table = document.add_table(rows=1, cols=1, style='Table Grid')
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        'THIS IS NOT A DIAGNOSTIC REPORT. UNVALIDATED FINDINGS SHOULD NOT BE USED TO INFORM CLINICAL MANAGEMENT DECISIONS.\n')
+    run.font.color.rgb = RGBColor(255, 0, 0)
+    run = table.rows[0].cells[0].paragraphs[0].add_run(
+        'This is a record of unvalidated variants identified through the 100,000 genome project.\n'
+        'Class 3 variants are of uncertain clinical significance, future review and diagnostic confirmation may '
+        'be appropriate if further evidence becomes available.\n')
+    run.font.color.rgb = RGBColor(255, 0, 0)
+
+    table.rows[0].cells[0].paragraphs[0].paragraph_format.space_before = Cm(0.3)
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run('Case Information:\n')
+    run.font.size = Pt(16)
+    run.underline = True
+    run.bold = True
+    table = document.add_table(rows=22, cols=2, style='Table Grid')
+    heading_cells = table.columns[0].cells
+    heading_cells[0].paragraphs[0].add_run('Patient Name').bold = True
+    heading_cells[1].paragraphs[0].add_run('Date of Birth').bold = True
+    heading_cells[2].paragraphs[0].add_run('NHS number').bold = True
+    heading_cells[3].paragraphs[0].add_run('Gender').bold = True
+    heading_cells[4].paragraphs[0].add_run('Local Identifier').bold = True
+    heading_cells[5].paragraphs[0].add_run('Referring Clinician').bold = True
+    heading_cells[6].paragraphs[0].add_run('Department/Hospital').bold = True
+    heading_cells[7].paragraphs[0].add_run('Study').bold = True
+    heading_cells[8].paragraphs[0].add_run('CIP ID').bold = True
+    heading_cells[9].paragraphs[0].add_run('Family ID').bold = True
+    heading_cells[10].paragraphs[0].add_run('Proband ID').bold = True
+    heading_cells[11].paragraphs[0].add_run('Genome Build').bold = True
+    heading_cells[12].paragraphs[0].add_run('Panels Applied').bold = True
+    heading_cells[13].paragraphs[0].add_run('Case Status').bold = True
+    heading_cells[14].paragraphs[0].add_run('MDT Status').bold = True
+    heading_cells[15].paragraphs[0].add_run('CIP-API Status').bold = True
+    heading_cells[16].paragraphs[0].add_run('Case Sent').bold = True
+    heading_cells[17].paragraphs[0].add_run('Pilot Case').bold = True
+    heading_cells[18].paragraphs[0].add_run('No Primary Findings').bold = True
+    heading_cells[19].paragraphs[0].add_run('Case Code').bold = True
+    heading_cells[20].paragraphs[0].add_run('Case first checker').bold = True
+    heading_cells[21].paragraphs[0].add_run('Case second checker').bold = True
+    value_cells = table.columns[1].cells
+    value_cells[0].paragraphs[0].add_run((str(report.ir_family.participant_family.proband.forename) +
+                  ' ' + str(report.ir_family.participant_family.proband.surname)))
+    value_cells[1].paragraphs[0].add_run(str(report.ir_family.participant_family.proband.date_of_birth.date()))
+    value_cells[2].paragraphs[0].add_run(report.ir_family.participant_family.proband.nhs_number)
+    value_cells[3].paragraphs[0].add_run(report.ir_family.participant_family.proband.sex)
+    if report.ir_family.participant_family.proband.local_id:
+        value_cells[4].paragraphs[0].add_run(report.ir_family.participant_family.proband.local_id)
+    value_cells[5].paragraphs[0].add_run(report.ir_family.participant_family.clinician.name)
+    value_cells[6].paragraphs[0].add_run(report.ir_family.participant_family.clinician.hospital)
+    value_cells[7].paragraphs[0].add_run("100,000 genomes (whole genome sequencing)")
+    value_cells[8].paragraphs[0].add_run(report.ir_family.ir_family_id)
+    value_cells[9].paragraphs[0].add_run(report.ir_family.participant_family.gel_family_id)
+    value_cells[10].paragraphs[0].add_run(report.ir_family.participant_family.proband.gel_id)
+    value_cells[11].paragraphs[0].add_run(str(report.assembly))
+    panels = InterpretationReportFamilyPanel.objects.filter(ir_family=report.ir_family)
+    panels = [str(panel.panel) for panel in panels]
+    value_cells[12].paragraphs[0].add_run(';'.join((panels)))
+    value_cells[13].paragraphs[0].add_run(report.get_case_status_display())
+    value_cells[14].paragraphs[0].add_run(report.get_mdt_status_display())
+    value_cells[15].paragraphs[0].add_run(report.status)
+    value_cells[16].paragraphs[0].add_run(str(report.case_sent))
+    value_cells[17].paragraphs[0].add_run(str(report.pilot_case))
+    value_cells[18].paragraphs[0].add_run(str(report.no_primary_findings))
+    value_cells[19].paragraphs[0].add_run(report.case_code)
+    if report.first_check:
+        value_cells[20].paragraphs[0].add_run('{} {}'.format(report.first_check.first_name,
+                                                            report.first_check.last_name))
+    if report.second_check:
+        value_cells[21].paragraphs[0].add_run('{} {}'.format(report.second_check.first_name,
+                                                            report.check_check.last_name))
+
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run('Proband Information:\n')
+    run.font.size = Pt(16)
+    run.underline = True
+    run.bold = True
+    table = document.add_table(rows=4, cols=2, style='Table Grid')
+    heading_cells = table.columns[0].cells
+    heading_cells[0].paragraphs[0].add_run('Comment').bold = True
+    heading_cells[1].paragraphs[0].add_run('Outcome').bold = True
+    heading_cells[2].paragraphs[0].add_run('MDT Discussion').bold = True
+    heading_cells[3].paragraphs[0].add_run('MDT Action').bold = True
+    value_cells = table.columns[1].cells
+    value_cells[0].paragraphs[0].add_run(report.ir_family.participant_family.proband.comment.rstrip())
+    value_cells[1].paragraphs[0].add_run(report.ir_family.participant_family.proband.outcome.rstrip())
+    value_cells[2].paragraphs[0].add_run(report.ir_family.participant_family.proband.action.rstrip())
+    value_cells[3].paragraphs[0].add_run(report.ir_family.participant_family.proband.discussion.rstrip())
+
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run('Case Comments:\n')
+    run.font.size = Pt(16)
+    run.underline = True
+    run.bold = True
+    case_comments = CaseComment.objects.filter(interpretation_report=report)
+    table = document.add_table(rows=len(case_comments)+1, cols=2, style='Table Grid')
+    heading_cells = table.rows[0].cells
+    heading_cells[0].paragraphs[0].add_run('Commenter and time').bold = True
+    heading_cells[1].paragraphs[0].add_run('Comment').bold = True
+    row = 1
+    for comment in case_comments:
+        value_cells = table.rows[row].cells
+        value_cells[0].paragraphs[0].add_run('{} {} on {}'.format(comment.user.first_name,
+                                                                  comment.user.last_name,
+                                                                  comment.time.strftime("%d/%m/%Y-%H:%M:%S")))
+        value_cells[1].paragraphs[0].add_run(comment.comment)
+        row += 1
+
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run('MDT History:\n')
+    run.font.size = Pt(16)
+    run.underline = True
+    run.bold = True
+    paragraph.add_run('This section contains a table per MDT, ordered by the most recent first')
+
+    mdt_linkage_list = MDTReport.objects.filter(interpretation_report=report).values('MDT')
+    mdts = MDT.objects.filter(id__in=mdt_linkage_list).order_by('-date_of_mdt')
+
+    if mdts:
+        for mdt in mdts:
+            clinicians = Clinician.objects.filter(mdt=mdt.id).values_list('name', flat=True)
+            clinical_scientists = ClinicalScientist.objects.filter(mdt=mdt.id).values_list('name', flat=True)
+            other_staff = OtherStaff.objects.filter(mdt=mdt.id).values_list('name', flat=True)
+            attendees = list(clinicians) + list(clinical_scientists) + list(other_staff)
+
+            paragraph = document.add_paragraph()
+            paragraph.add_run()
+            table = document.add_table(rows=6, cols=2, style='Table Grid')
+            heading_cells = table.columns[0].cells
+            heading_cells[0].paragraphs[0].add_run('MDT Date').bold = True
+            heading_cells[1].paragraphs[0].add_run('Status').bold = True
+            heading_cells[2].paragraphs[0].add_run('Creator').bold = True
+            heading_cells[3].paragraphs[0].add_run('Description').bold = True
+            heading_cells[4].paragraphs[0].add_run('Attendees').bold = True
+            heading_cells[5].paragraphs[0].add_run('Sent to Clinician').bold = True
+
+            value_cells = table.columns[1].cells
+            value_cells[0].paragraphs[0].add_run(mdt.date_of_mdt.strftime("%d/%m/%Y"))
+            value_cells[1].paragraphs[0].add_run(mdt.get_status_display())
+            value_cells[2].paragraphs[0].add_run('{} {}'.format(mdt.creator.first_name,
+                                                                mdt.creator.last_name))
+            value_cells[3].paragraphs[0].add_run(mdt.description)
+            value_cells[4].paragraphs[0].add_run(', '.join(attendees))
+            value_cells[5].paragraphs[0].add_run(str(mdt.sent_to_clinician))
+    else:
+        run = paragraph.add_run('No MDT History available\n')
+        run.font.size = Pt(13)
+
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run('SNVs/Indels:\n')
+    run.font.size = Pt(16)
+    run.underline = True
+    run.bold = True
+    proband_variants = list(ProbandVariant.objects.filter(interpretation_report=report))
+    if proband_variants:
+        paragraph.add_run('This section contains a table per variant\n')
+    else:
+        run = paragraph.add_run('No SNVs/Indels called\n')
+        run.font.size = Pt(13)
+    if proband_variants:
+        for proband_variant in proband_variants:
+            transcript = proband_variant.get_transcript()
+            transcript_variant = proband_variant.get_transcript_variant()
+            if transcript is None or transcript_variant is None:
+                raise ValueError(f"Please select transcripts for all variants before exporting\n")
+
+            rdr = proband_variant.create_rare_disease_report()
+            paragraph = document.add_paragraph()
+            table = document.add_table(rows=16, cols=2, style='Table Grid')
+            heading_cells = table.columns[0].cells
+            heading_cells[0].paragraphs[0].add_run('Gene').bold = True
+            heading_cells[1].paragraphs[0].add_run('Coordinates').bold = True
+            heading_cells[2].paragraphs[0].add_run('HGVSg').bold = True
+            heading_cells[3].paragraphs[0].add_run('HGVSc').bold = True
+            heading_cells[4].paragraphs[0].add_run('HGVSp').bold = True
+            heading_cells[5].paragraphs[0].add_run('TIER').bold = True
+            heading_cells[6].paragraphs[0].add_run('Zygosity').bold = True
+            heading_cells[7].paragraphs[0].add_run('Phenotype Contribution').bold = True
+            heading_cells[8].paragraphs[0].add_run('Classification').bold = True
+            heading_cells[9].paragraphs[0].add_run('MDT Action').bold = True
+            heading_cells[10].paragraphs[0].add_run('MDT Discussion').bold = True
+            heading_cells[11].paragraphs[0].add_run('Change Medication?').bold = True
+            heading_cells[12].paragraphs[0].add_run('Surgical Option?').bold = True
+            heading_cells[13].paragraphs[0].add_run('Add Relative Surveillance').bold = True
+            heading_cells[14].paragraphs[0].add_run('Clinical Trial').bold = True
+            heading_cells[15].paragraphs[0].add_run('Inform Reproductive Choice').bold = True
+
+            value_cells = table.columns[1].cells
+            value_cells[0].paragraphs[0].add_run(str(transcript.gene))
+            value_cells[1].paragraphs[0].add_run(str(proband_variant.variant))
+            value_cells[2].paragraphs[0].add_run(str(transcript_variant.hgvs_g))
+            value_cells[3].paragraphs[0].add_run(str(transcript_variant.hgvs_c))
+            value_cells[4].paragraphs[0].add_run(str(transcript_variant.hgvs_p))
+            value_cells[5].paragraphs[0].add_run(str(proband_variant.max_tier))
+            value_cells[6].paragraphs[0].add_run(str(proband_variant.zygosity))
+            value_cells[7].paragraphs[0].add_run(str(rdr.get_contribution_to_phenotype_display()))
+            value_cells[8].paragraphs[0].add_run(str(rdr.classification))
+            value_cells[9].paragraphs[0].add_run(str(rdr.action).rstrip())
+            value_cells[10].paragraphs[0].add_run(str(rdr.discussion).rstrip())
+            value_cells[11].paragraphs[0].add_run(str(rdr.change_med))
+            value_cells[12].paragraphs[0].add_run(str(rdr.surgical_option))
+            value_cells[13].paragraphs[0].add_run(str(rdr.add_surveillance_for_relatives))
+            value_cells[14].paragraphs[0].add_run(str(rdr.clinical_trial))
+            value_cells[15].paragraphs[0].add_run(str(rdr.inform_reproductive_choice))
+
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run('CNVs:\n')
+    run.font.size = Pt(16)
+    run.underline = True
+    run.bold = True
+    proband_svs = list(ProbandSV.objects.filter(interpretation_report=report))
+    if proband_svs:
+        paragraph.add_run('This section contains a table per CNV\n')
+    else:
+        run = paragraph.add_run('No CNVs called\n')
+        run.font.size = Pt(13)
+    if proband_svs:
+        for proband_sv in proband_svs:
+
+            rdr = proband_sv.create_rare_disease_report()
+            paragraph = document.add_paragraph()
+
+            table = document.add_table(rows=12, cols=2, style='Table Grid')
+            heading_cells = table.columns[0].cells
+            heading_cells[0].paragraphs[0].add_run('CNV Coordinates').bold = True
+            heading_cells[1].paragraphs[0].add_run('TIER').bold = True
+            heading_cells[2].paragraphs[0].add_run('CNV type').bold = True
+            heading_cells[3].paragraphs[0].add_run('Phenotype Contribution').bold = True
+            heading_cells[4].paragraphs[0].add_run('Classification').bold = True
+            heading_cells[5].paragraphs[0].add_run('MDT Action').bold = True
+            heading_cells[6].paragraphs[0].add_run('MDT Discussion').bold = True
+            heading_cells[7].paragraphs[0].add_run('Change Medication?').bold = True
+            heading_cells[8].paragraphs[0].add_run('Surgical Option?').bold = True
+            heading_cells[9].paragraphs[0].add_run('Add Relative Surveillance').bold = True
+            heading_cells[10].paragraphs[0].add_run('Clinical Trial').bold = True
+            heading_cells[11].paragraphs[0].add_run('Inform Reproductive Choice').bold = True
+
+            value_cells = table.columns[1].cells
+            value_cells[0].paragraphs[0].add_run(str(proband_sv.sv))
+            value_cells[1].paragraphs[0].add_run(str(proband_sv.max_tier))
+            value_cells[2].paragraphs[0].add_run(str(proband_sv.sv.variant_type))
+            value_cells[3].paragraphs[0].add_run(str(rdr.get_contribution_to_phenotype_display()))
+            value_cells[4].paragraphs[0].add_run(str(rdr.classification))
+            value_cells[5].paragraphs[0].add_run(str(rdr.action))
+            value_cells[6].paragraphs[0].add_run(str(rdr.discussion))
+            value_cells[7].paragraphs[0].add_run(str(rdr.change_med))
+            value_cells[8].paragraphs[0].add_run(str(rdr.surgical_option))
+            value_cells[9].paragraphs[0].add_run(str(rdr.add_surveillance_for_relatives))
+            value_cells[10].paragraphs[0].add_run(str(rdr.clinical_trial))
+            value_cells[11].paragraphs[0].add_run(str(rdr.inform_reproductive_choice))
+
+    paragraph = document.add_paragraph()
+    run = paragraph.add_run('STRs:\n')
+    run.font.size = Pt(16)
+    run.underline = True
+    run.bold = True
+    proband_strs = list(ProbandSTR.objects.filter(interpretation_report=report))
+    if proband_strs:
+        paragraph.add_run('This section contains a table per STR\n')
+    else:
+        run = paragraph.add_run('No STRs called\n')
+        run.font.size = Pt(13)
+
+    if proband_strs:
+        for proband_str in proband_svs:
+            rdr = proband_str.create_rare_disease_report()
+            paragraph = document.add_paragraph()
+            paragraph.add_run()
+            table = document.add_table(rows=11, cols=2, style='Table Grid')
+            heading_cells = table.columns[0].cells
+            heading_cells[0].paragraphs[0].add_run('STR Coordinates').bold = True
+            heading_cells[1].paragraphs[0].add_run('TIER').bold = True
+            heading_cells[2].paragraphs[0].add_run('Phenotype Contribution').bold = True
+            heading_cells[3].paragraphs[0].add_run('Classification').bold = True
+            heading_cells[4].paragraphs[0].add_run('MDT Action').bold = True
+            heading_cells[5].paragraphs[0].add_run('MDT Discussion').bold = True
+            heading_cells[6].paragraphs[0].add_run('Change Medication?').bold = True
+            heading_cells[7].paragraphs[0].add_run('Surgical Option?').bold = True
+            heading_cells[8].paragraphs[0].add_run('Add Relative Surveillance').bold = True
+            heading_cells[9].paragraphs[0].add_run('Clinical Trial').bold = True
+            heading_cells[10].paragraphs[0].add_run('Inform Reproductive Choice').bold = True
+
+            value_cells = table.columns[1].cells
+            value_cells[0].paragraphs[0].add_run(str(proband_str.str_variant))
+            value_cells[1].paragraphs[0].add_run(str(proband_str.max_tier))
+            value_cells[2].paragraphs[0].add_run(str(rdr.get_contribution_to_phenotype_display()))
+            value_cells[3].paragraphs[0].add_run(str(rdr.classification))
+            value_cells[4].paragraphs[0].add_run(str(rdr.action))
+            value_cells[5].paragraphs[0].add_run(str(rdr.discussion))
+            value_cells[6].paragraphs[0].add_run(str(rdr.change_med))
+            value_cells[7].paragraphs[0].add_run(str(rdr.surgical_option))
+            value_cells[8].paragraphs[0].add_run(str(rdr.add_surveillance_for_relatives))
+            value_cells[9].paragraphs[0].add_run(str(rdr.clinical_trial))
+            value_cells[10].paragraphs[0].add_run(str(rdr.inform_reproductive_choice))
+
+    return document
+
+
 def write_mdt_export(mdt_instance, mdt_reports):
     '''
     Writes a summary of the cases which are being brought to MDT

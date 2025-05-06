@@ -77,6 +77,7 @@ urlpatterns = [
     path('delete_mdt/<int:mdt_id>', views.delete_mdt, name='delete-mdt'),
     path('export_mdt/<int:mdt_id>', views.export_mdt, name='export-mdt'),
     path('export_mdt_outcome_form/<int:report_id>', views.export_mdt_outcome_form, name='export-mdt-outcome'),
+    path('export_report_outcome_form/<int:report_id>', views.export_report_outcome_form, name='export-report-outcome'),
     path('export_gtab_template/<int:report_id>', views.export_gtab_template, name='export-gtab-template'),
 
     path('select_attendees_for_mdt/<int:mdt_id>', views.select_attendees_for_mdt, name='select-attendees-for-mdt'),

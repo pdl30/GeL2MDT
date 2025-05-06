@@ -388,6 +388,11 @@
                                         </div>
                                     {% endif %}
                                     {% endif %}
+                                    {% if sample_type == 'raredisease' %}
+                                        <div class="col-md-2">
+                                            <a href="/export_report_outcome_form/{{report.id}}"><i class="fas fa-external-link-alt"></i> Report Outcome</a>
+                                        </div>
+                                    {% endif %}
                                     {% if sample_type == 'cancer' %}
                                     <div class="col-md-2">
                                             <a href="/export_gtab_template/{{report.id}}"><i class="fas fa-external-link-alt"></i> GTAB Template</a>

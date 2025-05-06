@@ -41,6 +41,7 @@ from .forms import *
 from .filters import *
 from .tasks import *
 from .exports import write_mdt_outcome_template, write_mdt_export, write_gtab_template, monthly_not_completed, write_npf_template, access_request_template
+from .exports import write_report_outcome_template
 from .api.api_views import *
 from .database_utils.multiple_case_adder import MultipleCaseAdder
 from .vep_utils.run_vep_batch import CaseVariant
@@ -1565,7 +1566,38 @@ def export_mdt_outcome_form(request, report_id):
     except ValueError as error:
         messages.add_message(request, 40, error)
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-      
+
+
+@login_required
+def export_report_outcome_form(request, report_id):
+    '''
+    Exports GEL2MDT outcome form which is case specific
+    :param request:
+    :param report_id:  GEL Interpretation report
+    :return: DOCX format file
+    '''
+    report = GELInterpretationReport.objects.get(id=report_id)
+    try:
+        document = write_report_outcome_template(report)
+        f = BytesIO()
+        document.save(f)
+        length = f.tell()
+        f.seek(0)
+        response = HttpResponse(
+            f.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        )
+
+        filename = '{}_{}_NTGMC_GeL2MDT_export.docx'.format(report.ir_family.ir_family_id,
+                                                            datetime.datetime.now().strftime("%m/%d/%Y-%H:%M:%S"))
+        response['Content-Disposition'] = 'attachment; filename=' + filename
+        response['Content-Length'] = length
+        return response
+    except ValueError as error:
+        messages.add_message(request, 40, error)
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
 @login_required
 def export_gtab_template(request, report_id):
     '''
